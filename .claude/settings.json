@@ -6,7 +6,22 @@
       "Bash(sort echo \"\" echo \"=== Files containing ''vernify'' \\(lowercase\\) ===\" grep -rl \"vernify\" --include=\"*.md\" --include=\"*.mdc\" --include=\"*.json\" --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.py\" --include=\"*.toml\" --include=\"*.yml\" --include=\"*.yaml\" .)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "mcp__graphiti__search_memory_facts",
+      "Bash(gh repo view:*)",
+      "Bash(gh issue create:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh api:*)",
+      "Bash(gh repo edit:*)",
+      "Bash(git -C /Users/minzhang/Developer/Vernify log --all --full-history -- \"Web/.env\" \".env\" \"Web/.env.local\")",
+      "Bash(git -C /Users/minzhang/Developer/Vernify log --all -p)",
+      "Bash(git -C /Users/minzhang/Developer/Vernify log --all --full-history --stat -- \"Web/.env\" \"*.env\")",
+      "Bash(git -C /Users/minzhang/Developer/Vernify show 7b8e835 --stat)",
+      "Bash(git -C /Users/minzhang/Developer/Vernify show f9cee7e --stat)"
     ]
   },
   "enabledPlugins": {

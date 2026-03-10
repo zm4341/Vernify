@@ -13,7 +13,7 @@ export const landingContent = {
   problemTitle: '学习枯燥？进度跟不上？',
 
   /** Problem 描述 */
-  problemDesc: '传统刷题难以理解，知识点分散难串联。Lattice 用动画与交互，让抽象概念看得见。',
+  problemDesc: '传统刷题难以理解，知识点分散难串联。Vernify 用动画与交互，让抽象概念看得见。',
 
   /** Features 区块标题 */
   featuresTitle: '多学科 · 多年级 · 系统学习',

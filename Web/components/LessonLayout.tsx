@@ -156,7 +156,7 @@ export const LessonLayout: React.FC<LessonLayoutProps> = ({ children }) => {
           {/* Footer */}
           <footer className="mt-32 pt-8 border-t border-white/5">
             <div className="flex items-center justify-between text-xs text-white/30">
-              <span>Lattice Learning System</span>
+              <span>Vernify Learning System</span>
               <Link 
                 href="/"
                 className="flex items-center gap-2 hover:text-white/50 transition-colors"

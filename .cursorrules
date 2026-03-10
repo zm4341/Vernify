@@ -22,7 +22,7 @@
 
 - 完整规则在 **.cursor/rules/**，例如 `project-structure.mdc`、`agent-orchestration.mdc`、`task-priority-workflow.mdc`、`post-task-workflow.mdc`。
 - 在满足规则前提下，优先**一次选对路径、少重复探索**，以控制上下文与 Token。
-- 任务开始先做 **Graphiti 检索**（与当前任务相关的偏好、程序、事实）；涉及代码分析、查找、重构时委托 code-navigator（Serena）。
+- 任务开始：先 **Graphiti 检索**、必要时读文档，再撰写 **issue**（可委托 github SubAgent）、**建 issue 后立即切分支**（feat/fix/docs/refactor），调用相关 SubAgent；任务结束后先 **记录 Graphiti**、委托 SubAgent 更新文档、再撰写 **PR**（Fixes #N）；**PR 创建后等用户确认**，不自行 merge 或删分支。涉及代码分析、查找、重构时委托 code-navigator（Serena）。
 - 页面/UI 修改（含 Web/app/、Web/components/ 下任何写操作）须委托 **page-maker**，主 Agent 不得直接改页面代码。
 
 ## 运行方式

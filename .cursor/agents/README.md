@@ -27,6 +27,7 @@
 | 数据库查询/验证 | **database-tester** | Supabase MCP 查询、验证、数据修复 |
 | 代码审查 | **code-reviewer** | 规格符合度 + 代码质量审查（参考 Superpowers）|
 | LaTeX 解析与同步 | **latex-parser** | 解析 LaTeX、同步到 DB |
+| GitHub 操作（创建/关联 issue、创建 PR、评论等） | **github** | 任务前创建或关联 issue（建 issue 后主流程会切出 feat/fix/docs/refactor 分支）、解决后创建 PR（Fixes #N）；**不自行 merge 或删分支**，等用户确认后由用户执行；使用 gh CLI 或 GitHub MCP，未安装或未认证时提示用户 |
 | 复杂功能 7 阶段编排 | **code-explorer**、**code-architect** | `/orchestrate feature` 专用；Phase 2/4 调用 |
 
 ## 已配置的 SubAgents（详细）
@@ -49,6 +50,7 @@
 | **llm-config** | LLM 配置管理 | 批改服务、模型切换、LiteLLM |
 | **database-tester** | 数据库操作 | Supabase 查询、验证、数据修复 |
 | **latex-parser** | LaTeX 解析与同步 | 解析 LaTeX、同步到 DB |
+| **github** | GitHub 操作 | 创建/关联 issue、创建 PR（Fixes #N）；不自行 merge/删分支，等用户确认；gh CLI 或 GitHub MCP |
 | **n8n-workflow** | n8n 工作流管理 | 通过 n8n-mcp 创建/更新/验证/执行 workflow；配合 n8n-skills |
 | **code-explorer** | 代码库探索 | `/orchestrate feature` Phase 2 专用；并行 2–3 个，追踪执行路径、映射架构 |
 | **code-architect** | 架构蓝图设计 | `/orchestrate feature` Phase 4 专用；并行 2–3 个，输出实现蓝图 |
@@ -66,6 +68,7 @@
 使用 frontend-reviewer 审查课程列表页的代码质量
 使用 tdd-executor 按任务列表执行 TDD
 使用 post-task-reviewer 执行任务收尾流程
+使用 github 创建本次任务的 issue / 使用 github 创建 PR 并关联 issue（PR 后等用户确认再 merge/删分支）
 ```
 
 ## SubAgent 优先级

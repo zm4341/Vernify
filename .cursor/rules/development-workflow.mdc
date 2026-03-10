@@ -95,6 +95,8 @@ REFACTOR → 质量提升，测试仍通过
 
 | 时机 | 动作 | 说明 |
 |------|------|------|
+| **任务开始前** | 查 Graphiti → 查文档（上下文不足时）→ 撰写 issue（仅开发/修复/功能任务）→ 切分支（feat/fix/docs/refactor）→ 调用 SubAgent | 先委托 graphiti-memory 检索；仅当上下文仍不足时读 docs/；纯问答/纯检索不建 issue；建 issue 后立即切对应分支，不得在 main 上直接提交代码；见 `task-priority-workflow.mdc` |
+| **任务结束后** | commit/push → 记录 Graphiti → 更新文档（有架构/配置变更时）→ 撰写 PR | 有变更时先 commit/push，再 graphiti-memory 写入，再按需更新文档与配置，最后 PR；见 `task-priority-workflow.mdc` |
 | **交付前** | `/verify` 或 `/verify full` | 必须通过 6 步质量门控；Build 失败即停 |
 | **提 PR 前** | `/verify pre-pr` | 完整门控 + security-reviewer 扫描 |
 | **复杂新功能（3+ 文件）** | 按下面两行二选一 | 均需用户确认后再实现 |
@@ -103,7 +105,7 @@ REFACTOR → 质量提升，测试仍通过
 | **代码变更完成后** | 主动委托 code-reviewer | 不等用户要求 |
 | **Bug/新特性** | 先写失败测试再实现（tdd-executor）| RED → GREEN → REFACTOR |
 | **上下文 > 70%** | `/checkpoint` 存档 | 长任务分阶段 checkpoint |
-| **任务结束（有变更）** | 写 Graphiti + 更新 docs/ | 委托 post-task-reviewer 或按 post-task-workflow |
+| **任务结束（有变更）** | commit/push → 记录 Graphiti → 更新 docs/（有架构/配置变更时）→ 撰写 PR | 先落地变更，再 graphiti-memory 写入，按需更新文档与配置，最后 PR；或委托 post-task-reviewer 执行完整收尾 |
 | **架构/安全相关** | 委托 architect / security-reviewer | 架构出 ADR；安全 CRITICAL 立即告警 |
 
-参考：`AGENTS.md`、`docs/orchestrate-workflow.md`、`.cursor/commands/verify.md`、`.cursor/commands/plan.md`、`.cursor/commands/orchestrate.md`、`post-task-workflow.mdc`。
+参考：`AGENTS.md`、`docs/orchestrate-workflow.md`、`docs/GITHUB-WORKFLOW.md`、`.cursor/commands/verify.md`、`.cursor/commands/plan.md`、`.cursor/commands/orchestrate.md`、`post-task-workflow.mdc`。

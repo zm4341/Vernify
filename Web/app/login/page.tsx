@@ -85,7 +85,7 @@ function LoginForm() {
           >
             <Circle size={24} className="text-white" strokeWidth={3} />
           </div>
-          <span className="text-white/90 font-semibold text-xl tracking-wide">Lattice</span>
+          <span className="text-white/90 font-semibold text-xl tracking-wide">Vernify</span>
         </Link>
 
         <div

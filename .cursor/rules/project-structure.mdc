@@ -47,7 +47,7 @@ alwaysApply: true
 ## 目录结构
 
 ```
-a.圆的初步认识/
+Vernify/                      # 项目根目录（可随意重命名，无硬编码依赖）
 │
 ├── CLAUDE.md                   # Claude Code 项目入口，与 Cursor 协作共享 Graphiti 与 docs/
 ├── .claude/                    # Claude Code 配置（mcp.json、agents/ 等）

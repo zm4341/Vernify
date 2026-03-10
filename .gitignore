@@ -30,6 +30,12 @@ env/
 # Keep .env.example (safe template)
 !.env.example
 
+# GitHub token (gh / MCP) — NEVER commit
+.env.github
+
+# Cursor MCP 配置（含 GitHub token）— 勿提交，以 mcp.backup.json 为模板
+.cursor/mcp.json
+
 # Docker volumes
 Web/supabase/volumes/
 

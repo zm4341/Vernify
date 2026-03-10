@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "lattice-admin-latex-scan";
-const PATH_STORAGE_KEY = "lattice-admin-latex-path";
+const STORAGE_KEY = "vernify-admin-latex-scan";
+const PATH_STORAGE_KEY = "vernify-admin-latex-path";
 
 function loadPathFromStorage(): { dirPath: string; selectedDirName: string | null } {
   if (typeof window === "undefined") return { dirPath: "", selectedDirName: null };

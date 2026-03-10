@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "@/lib/providers";
 
 export const metadata: Metadata = {
-  title: "Lattice - 数学学习",
-  description: "圆的初步认识 - 交互式数学学习系统",
+  title: "Vernify - 数学学习",
+  description: "Vernify - 交互式数学学习系统",
 };
 
 export const viewport: Viewport = {

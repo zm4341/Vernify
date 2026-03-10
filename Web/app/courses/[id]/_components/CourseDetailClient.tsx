@@ -135,7 +135,7 @@ export function CourseDetailClient({
             >
               <Circle size={18} className="text-white" strokeWidth={3} aria-hidden />
             </div>
-            <span className="text-white/90 font-semibold text-lg">Lattice</span>
+            <span className="text-white/90 font-semibold text-lg">Vernify</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link
@@ -403,7 +403,7 @@ export function CourseDetailClient({
       <footer className="relative z-10 py-8 text-center">
         <div className="flex items-center justify-center gap-2 text-white/30 text-sm">
           <GraduationCap size={16} aria-hidden />
-          <span>Lattice Learning System</span>
+          <span>Vernify Learning System</span>
         </div>
       </footer>
     </main>

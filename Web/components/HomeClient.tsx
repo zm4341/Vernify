@@ -104,7 +104,7 @@ export default function HomeClient({ lessons }: { lessons: Lesson[] }) {
                         >
                             <Circle size={18} className="text-white" strokeWidth={3} />
                         </div>
-                        <span className="text-white/90 font-semibold text-lg tracking-wide">Lattice</span>
+                        <span className="text-white/90 font-semibold text-lg tracking-wide">Vernify</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <button 
@@ -260,7 +260,7 @@ export default function HomeClient({ lessons }: { lessons: Lesson[] }) {
             <footer className="relative z-10 py-12 text-center">
                 <div className="flex items-center justify-center gap-2 text-white/30 text-sm">
                     <GraduationCap size={16} />
-                    <span>Lattice Learning System</span>
+                    <span>Vernify Learning System</span>
                 </div>
             </footer>
         </main>

@@ -1,4 +1,4 @@
--- Lattice LMS 数据库初始化
+-- Vernify LMS 数据库初始化
 -- 创建核心表结构
 
 -- 启用 UUID 扩展

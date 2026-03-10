@@ -43,14 +43,14 @@ const defaults = {
     </>
   ),
   problemTitle: "学习枯燥？进度跟不上？",
-  problemDesc: "传统刷题难以理解，知识点分散难串联。Lattice 用动画与交互，让抽象概念看得见。",
+  problemDesc: "传统刷题难以理解，知识点分散难串联。Vernify 用动画与交互，让抽象概念看得见。",
   featuresTitle: "多学科 · 多年级 · 系统学习",
   featureDescs: ["语文 数学 英语", "小四至高三", "视频与练习"] as const,
 };
 
 /**
  * LandingClient - 公开落地页
- * 未登录用户访问主页时显示，介绍 Lattice 学习方案与登录/注册入口
+ * 未登录用户访问主页时显示，介绍 Vernify 学习方案与登录/注册入口
  * Hero / Problem / Features 文案支持 MDX 渲染的富文本
  */
 export default function LandingClient({
@@ -111,7 +111,7 @@ export default function LandingClient({
           <Link
             href="/"
             className="flex items-center gap-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-transparent rounded-lg transition-shadow duration-200"
-            aria-label="Lattice 首页"
+            aria-label="Vernify 首页"
           >
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -123,7 +123,7 @@ export default function LandingClient({
               <Circle size={18} className="text-white" strokeWidth={3} aria-hidden />
             </div>
             <span className="text-white/90 font-semibold text-lg tracking-wide">
-              Lattice
+              Vernify
             </span>
           </Link>
           <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export default function LandingClient({
               WebkitTextFillColor: "transparent",
             }}
           >
-            Lattice 学习方案
+            Vernify 学习方案
           </motion.h1>
 
           <motion.div
@@ -243,7 +243,7 @@ export default function LandingClient({
       <footer className="relative z-10 py-12 text-center" role="contentinfo">
         <div className="flex items-center justify-center gap-2 text-white/30 text-sm">
           <Circle size={16} aria-hidden />
-          <span>Lattice Learning System</span>
+          <span>Vernify Learning System</span>
         </div>
       </footer>
     </main>
