@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="34.41pt" height="34.41pt" viewBox="0 0 34.41 34.41">
+<defs>
+<clipPath id="clip-0">
+<path clip-rule="nonzero" d="M 17 0 L 18 0 L 18 34.410156 L 17 34.410156 Z M 17 0 "/>
+</clipPath>
+<clipPath id="clip-1">
+<path clip-rule="nonzero" d="M 0 17 L 34.410156 17 L 34.410156 18 L 0 18 Z M 0 17 "/>
+</clipPath>
+</defs>
+<path fill-rule="nonzero" fill="rgb(100%, 100%, 100%)" fill-opacity="1" stroke-width="0.79701" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 0%, 0%)" stroke-opacity="1" stroke-miterlimit="10" d="M -14.171844 -14.172 L -14.171844 14.17175 L 14.171906 14.17175 L 14.171906 -14.172 Z M -14.171844 -14.172 " transform="matrix(1, 0, 0, -1, 17.207, 17.203)"/>
+<g clip-path="url(#clip-0)">
+<path fill="none" stroke-width="0.3985" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(100%, 0%, 0%)" stroke-opacity="1" stroke-dasharray="2.98883 2.98883" stroke-miterlimit="10" d="M 0.00003125 -17.007938 L 0.00003125 17.007687 " transform="matrix(1, 0, 0, -1, 17.207, 17.203)"/>
+</g>
+<g clip-path="url(#clip-1)">
+<path fill="none" stroke-width="0.3985" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(100%, 0%, 0%)" stroke-opacity="1" stroke-dasharray="2.98883 2.98883" stroke-miterlimit="10" d="M -17.007781 -0.000125 L 17.007844 -0.000125 " transform="matrix(1, 0, 0, -1, 17.207, 17.203)"/>
+</g>
+<path fill="none" stroke-width="0.3985" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(100%, 0%, 0%)" stroke-opacity="1" stroke-dasharray="2.98883 2.98883" stroke-miterlimit="10" d="M -17.007781 -17.007938 L 17.007844 17.007687 " transform="matrix(1, 0, 0, -1, 17.207, 17.203)"/>
+<path fill="none" stroke-width="0.3985" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(100%, 0%, 0%)" stroke-opacity="1" stroke-dasharray="2.98883 2.98883" stroke-miterlimit="10" d="M -17.007781 17.007687 L 17.007844 -17.007938 " transform="matrix(1, 0, 0, -1, 17.207, 17.203)"/>
+</svg>

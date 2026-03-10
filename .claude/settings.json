@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx skills:*)",
+      "Read(//Users/minzhang/Developer/**)",
+      "Bash(sort echo \"\" echo \"=== Files containing ''vernify'' \\(lowercase\\) ===\" grep -rl \"vernify\" --include=\"*.md\" --include=\"*.mdc\" --include=\"*.json\" --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.py\" --include=\"*.toml\" --include=\"*.yml\" --include=\"*.yaml\" .)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git branch:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "hookify@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true
+  }
+}

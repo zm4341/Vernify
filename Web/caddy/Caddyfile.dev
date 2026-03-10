@@ -1,0 +1,122 @@
+# Caddy 开发环境配置
+# Next.js 为主后端（前端 + BFF），Caddy 不代理 FastAPI；Next.js 内部直接与 FastAPI 通信。
+#
+# 路由结构：
+#   /              → Next.js (前端 + API Routes，含 /api/v1/ai/*、/api/v1/latex/* 代理)
+#   /auth/*        → Supabase Auth
+#   /storage/*     → Supabase Storage
+#   /rest/*        → Supabase REST API
+#   /studio/*      → Supabase Studio
+
+{
+	# 禁用自动 HTTPS（开发环境）
+	auto_https off
+	auto_https disable_redirects
+	
+	# 禁用管理端点
+	admin off
+	
+	# 日志
+	log {
+		output stdout
+		format console
+		level INFO
+	}
+}
+
+# 统一入口 - localhost:38080
+:38080 {
+	# =========================================
+	# Supabase 服务
+	# =========================================
+	# Auth 服务
+	handle /auth/* {
+		reverse_proxy supabase-kong:8000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+	
+	# Storage 服务
+	handle /storage/* {
+		reverse_proxy supabase-kong:8000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+	
+	# REST API (PostgREST)
+	handle /rest/* {
+		reverse_proxy supabase-kong:8000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+	
+	# MCP 服务 - Supabase MCP（供 Cursor 等 AI 工具连接）
+	handle /mcp* {
+		reverse_proxy supabase-kong:8000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	# Realtime 服务 (WebSocket)
+	handle /realtime/* {
+		reverse_proxy supabase-kong:8000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			header_up Upgrade {>Upgrade}
+			header_up Connection {>Connection}
+		}
+	}
+	
+	# =========================================
+	# Supabase Studio (管理界面)
+	# =========================================
+	handle /studio/* {
+		uri strip_prefix /studio
+		reverse_proxy supabase-studio:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+	
+	# =========================================
+	# Next.js (前端 + API Routes) - 默认路由
+	# 处理所有其他请求，包括 /api/* 路由
+	# =========================================
+	handle {
+		reverse_proxy frontend:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			
+			# WebSocket 支持 (Next.js HMR)
+			header_up Upgrade {>Upgrade}
+			header_up Connection {>Connection}
+		}
+	}
+	
+	# 日志
+	log {
+		output stdout
+		format console
+	}
+	
+	# 压缩
+	encode gzip zstd
+}

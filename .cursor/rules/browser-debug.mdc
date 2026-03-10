@@ -1,0 +1,51 @@
+---
+description: 网页调试与测试必须使用 Chrome DevTools MCP
+alwaysApply: true
+---
+
+# 网页调试与测试
+
+## 必须使用 Chrome DevTools MCP
+
+凡涉及**网页效果验证、前端问题排查、E2E 行为确认**时，一律使用 **Chrome DevTools MCP**（cursor-ide-browser / chrome-devtools）进行实际浏览器调试，不得仅凭代码推断。
+
+## 适用场景
+
+- 用户反馈「页面打不开 / 白屏 / 报错 / 样式不对」时
+- 修改登录、注册、首页、课程页等前端后需要验证时
+- 需要确认重定向、接口报错、控制台错误时
+- 需要查看 DOM 结构、网络请求、Console 日志时
+
+## 专用浏览器操作协议（必须遵守）
+
+> **核心约定**：Chrome DevTools MCP 每次使用均需先开启专用浏览器，由用户导航到目标页面并确认，AI 才可操作。禁止直接 navigate 到具体 URL。
+
+### 首次打开流程
+
+1. **开启专用浏览器**：调用 Chrome DevTools MCP 启动浏览器（`list_pages` 确认已启动），**不要**调用 `navigate_page`
+2. **等待用户导航**：告知用户「专用浏览器已启动，请导航到目标页面后告诉我」
+3. **用户确认**：用户说「好了 / 已到 xxx 页面」后，再进行测试
+
+### 代码修改后再次验证流程
+
+1. **请用户关闭专用浏览器**：「我已修改代码，请先关闭专用浏览器，完成后告诉我」
+2. **用户确认已关闭**后，开启新的专用浏览器（重复首次打开流程）
+3. 等用户导航并确认，再验证结果
+
+### 确认页面后的操作
+
+- `take_snapshot` 获取 a11y 树，必要时 `take_screenshot`
+- `list_console_messages`（过滤 error/warn）、`list_network_requests`
+- `evaluate_script` 取 `__NEXT_DATA__` 等
+- 需要交互时用 `click`、`fill`、`press_key`
+
+## 子 Agent 分工
+
+- 将「在真实浏览器里打开指定 URL、截图、看控制台/网络、做简单交互」类任务交给 **browser-tester** 子 Agent 执行。
+- 主 Agent 根据 browser-tester 的反馈（截图、错误信息、DOM/数据）继续修代码或改配置。
+
+## 本项目的默认调试地址
+
+- **`http://127.0.0.1:38080/`**（Vernify 前后端均在 Docker 中运行，经 Caddy 统一入口）
+
+调试前确认 Docker 已启动：`cd Web && docker compose -f docker-compose.yml -f docker-compose.dev.yml -p vernify up -d`

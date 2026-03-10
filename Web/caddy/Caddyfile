@@ -1,0 +1,75 @@
+# Caddy 配置文件
+# 用于反向代理前端和后端服务
+
+# 全局选项
+{
+	# 禁用自动 HTTPS 证书管理
+	auto_https off
+	# 禁用 HTTP→HTTPS 重定向（否则访问 :38080 会被重定向到 https://localhost/ 导致失败）
+	auto_https disable_redirects
+	
+	# 管理端点（可选）
+	admin off
+	
+	# 日志
+	log {
+		output stdout
+		format console
+		level INFO
+	}
+}
+
+# 主域名配置 - 仅监听 HTTP (80 端口)
+# Docker 会映射到宿主机的 38080；浏览器访问 http://127.0.0.1:38080 时 Supabase 请求也走此处
+:80 {
+	# Supabase API（/auth、/rest、/storage）→ Kong
+	handle /auth/v1* {
+		reverse_proxy supabase-kong:8000
+	}
+	handle /rest/v1* {
+		reverse_proxy supabase-kong:8000
+	}
+	handle /storage/v1* {
+		reverse_proxy supabase-kong:8000
+	}
+
+	# 前端 - Next.js 应用
+	handle {
+		reverse_proxy frontend:3000 {
+			health_uri /
+			health_interval 30s
+			health_timeout 5s
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+	
+	log {
+		output stdout
+		format json
+	}
+	encode gzip zstd
+}
+
+
+# Supabase 域名配置（可选，如果需要通过 Caddy 代理）
+# {$SUPABASE_ADDRESS:supabase.localhost} {
+# 	handle /auth/* {
+# 		reverse_proxy supabase-kong:8000
+# 	}
+# 	
+# 	handle /storage/* {
+# 		reverse_proxy supabase-kong:8000
+# 	}
+# 	
+# 	handle /rest/* {
+# 		reverse_proxy supabase-kong:8000
+# 	}
+# 	
+# 	# Supabase Studio
+# 	handle {
+# 		reverse_proxy supabase-studio:3000
+# 	}
+# }

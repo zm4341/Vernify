@@ -1,0 +1,5 @@
+# Kong 网关：启动时用环境变量生成 kong.yml
+FROM kong:2.8.1
+COPY kong.yml.template /var/lib/kong/kong.yml.template
+COPY kong-entrypoint.sh /kong-entrypoint.sh
+ENTRYPOINT ["/bin/sh", "/kong-entrypoint.sh"]

@@ -1,0 +1,4 @@
+# 构建时使用 docker-compose build args 注入 NEXT_PUBLIC_*，避免 .env 占位符覆盖
+.env
+.env.*
+!.env.example

@@ -1,0 +1,23 @@
+# Lattice Frontend - Development Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# 安装依赖（构建时预装，volume 挂载后可能被覆盖，由 entrypoint 在启动时补装）
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# 入口脚本（先复制，避免被 COPY . 覆盖）
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# 复制源代码
+COPY . .
+
+ENV NODE_ENV development
+ENV NEXT_TELEMETRY_DISABLED 1
+
+EXPOSE 3000
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["npm", "run", "dev"]

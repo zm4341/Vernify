@@ -1,0 +1,58 @@
+---
+description: 任务前后必做——查询(前)、更新文档+记录(后)，最高优先级，自动化。主 Agent 与 SubAgent 均须遵循，无需用户提醒。
+alwaysApply: true
+---
+
+# 任务前后必做（最高优先级、自动化）
+
+## ⚠️ 任务开始时：先检索（必做，不得跳过）
+
+**主 Agent 在做任何事之前，必须先执行 Graphiti 检索，不得跳过。** 此步骤为最高优先级，无可例外。
+
+每次任务/对话**开始时**，主 Agent 必须**按序**执行（Rules/Skills 统一约定）：
+
+1. **Graphiti 检索（必做，不得跳过）**：**必须**委托 **graphiti-memory** SubAgent 执行（主 Agent 不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`）；检索与当前任务相关的偏好、程序、事实并遵循检索结果执行。
+2. **必要时 Serena**：若涉及代码分析、查找、重构，委托 **code-navigator**（使用 Serena）进行符号与依赖分析。重构含义见 `refactor-convention.mdc`（简化结构、突出主干、移除冗余，不堆叠补充节点）。
+3. **必要时读项目文档**：若上下文不足，先读 `docs/`（如 docs/architecture/ARCHITECTURE.md、docs/architecture/PRD.md）、`.cursor/` 下相关规则或 README，再动手。
+
+**查询、更新文档、记录** 是最高优先级，应**自动化**执行。主 Agent 和 SubAgent 均须遵循，**无需用户每次提醒**。
+
+## 做事前：Graphiti 查询（与上衔接）
+
+- **主 Agent**：须委托 **graphiti-memory** SubAgent 执行检索，不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`。
+- **SubAgent**（如 graphiti-memory）：可使用 Graphiti MCP 工具执行检索与写入。
+- 遵循检索到的内容执行。
+
+## 交付前：构建与已知错误
+
+- **主 Agent 与 SubAgent 须自动修复构建错误和已知错误**，直接交付可用结果，不把未修复问题留给用户。
+- 交付前必须确保：**构建通过**（如 `cd Web && npm run build` 或等效命令成功）、**已知错误已修复**（含 Lint、类型、测试失败等）。
+- 禁止交付带构建失败或已知 bug 的结果；若暂时无法修完，须在汇报中明确说明剩余问题与建议。
+
+## 做事后：更新文档 + 记录
+
+**有了结论后**（包括查询类任务得出结论、代码变更、配置变更等），必须**自动**执行：
+
+1. **更新文档** - 更新 `docs/`、`MIGRATION.md` 等受影响的文档
+2. **更新配置** - 更新受影响的 Rules、Skills、SubAgents、Commands
+3. **Graphiti 记录** - 须委托 **graphiti-memory** SubAgent 执行写入（主 Agent 不得让用户手动执行）；按 graphiti-memory.mdc 约定用 `add_memory` 记录本次结论/变更（本 MCP 无 add_episode）；**记录时按文档整体重构记忆**：需根据所有 Vernify 文档理解整体重构记忆（删除/修正错误、使全部记忆与文档一致），不只追加；若发现既有记忆与当前事实不符，先修正错误记忆（删除或改写）再写入。见 `graphiti-memory.mdc`。
+
+## 主 Agent 的职责
+
+- 有了结论后，**必须**委托 **post-task-reviewer** 或 **docs-updater**（文档）/ **project-updater**（配置）执行上述更新与记录
+- 不等待用户提醒，主动委托
+
+## SubAgent 的职责
+
+- 完成任务后，向主 Agent 汇报；主 Agent 收到汇报后**立即**委托 post-task-reviewer 执行收尾，不得等待、不得跳过。见 `auto-record-changes.mdc`。
+- 若 SubAgent 直接完成文档/配置更新，必须委托 **graphiti-memory** 写入 Graphiti
+
+## 触发方式
+
+- **自动化**：主 Agent 或 SubAgent 完成任务/得出结论后，**主动**委托 post-task-reviewer 或 project-updater + graphiti-memory，无需用户说「去更新文档」「去记录」
+
+## 参考
+
+- `post-task-workflow.mdc` - 完整收尾流程
+- `graphiti-memory.mdc` - Graphiti 查询与记录
+- SubAgent：post-task-reviewer、docs-updater、project-updater、graphiti-memory

@@ -1,0 +1,13 @@
+# 显式覆盖：backend/worker 使用匿名卷挂载 /app/content，
+# 避免绑定挂载 ../content 时 Docker 在宿主机创建根目录 Content
+# 应用不依赖 content 目录，课时正文来自 DB
+services:
+  backend:
+    volumes:
+      - content_anon:/app/content
+  worker:
+    volumes:
+      - content_anon:/app/content
+
+volumes:
+  content_anon:

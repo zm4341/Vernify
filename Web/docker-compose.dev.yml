@@ -1,0 +1,101 @@
+# Vernify 开发环境配置
+# 用法: cd Web && docker compose -f docker-compose.yml -f docker-compose.dev.yml -p vernify up -d
+#
+# Next.js 全栈架构 + AI 服务
+# 统一路由：所有服务通过 Caddy (:38080) 访问
+#   /               → Next.js (前端 + API Routes)
+#   /api/v1/ai/*    → 经 Next.js BFF 代理至 FastAPI
+#   /auth/*         → Supabase Auth
+#   /storage/*  → Supabase Storage
+#   /rest/*     → Supabase REST API
+#   /studio/*   → Supabase Studio
+
+services:
+  # Next.js 全栈 - 前端 + API Routes
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      # 源码挂载；不覆盖 node_modules，使用镜像内 npm install 的结果
+      - .:/app
+      - frontend_node_modules:/app/node_modules
+      # .next 改用 NEXT_DIST_DIR=/tmp/.next，不挂载 volume，避免 Permission denied
+      - frontend_next:/app/.next
+    environment:
+      - NEXT_DIST_DIR=/tmp/.next
+      - NODE_ENV=development
+      # 统一入口（浏览器访问）
+      - NEXT_PUBLIC_APP_URL=http://localhost:38080
+      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:38080
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      # 服务端访问 Supabase（Docker 内部网络）
+      - SUPABASE_SERVER_URL=http://caddy:38080
+      # AI 服务地址（内部通信）
+      - AI_SERVICE_URL=http://backend:8000
+      # Supabase 服务端
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    # 不对外暴露端口，通过 Caddy 访问
+    ports: !override []
+    command: npm run dev
+
+  # AI 服务 (FastAPI) - 专注于 AI 批改
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+      - content_anon:/app/content  # 匿名卷，避免绑定 ../content 时创建根目录 Content
+    environment:
+      - DEBUG=true
+      - RELOAD=true
+    # 不对外暴露端口，通过 Caddy 访问
+    ports: !override []
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Worker 开发模式
+  worker:
+    volumes:
+      - ./backend:/app
+      - content_anon:/app/content
+    command: celery -A app.workers.celery_app worker --loglevel=debug
+
+  # Caddy - 统一路由入口 (唯一对外暴露的端口)
+  caddy:
+    build:
+      context: ./caddy
+      dockerfile: Dockerfile
+    ports: !override
+      - "38080:38080"
+    volumes:
+      - ./caddy/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    environment:
+      - SITE_ADDRESS=localhost
+      - API_ADDRESS=localhost
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:38080"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Supabase 服务 - 不对外暴露端口，通过 Caddy 访问
+  supabase-studio:
+    ports: !override []
+  
+  supabase-kong:
+    ports: !override []
+
+  # 数据库和 Redis - 保留端口用于本地工具连接（可选）
+  db:
+    ports: !override
+      - "35432:5432"
+  
+  redis:
+    ports: !override
+      - "36379:6379"
+
+volumes:
+  frontend_node_modules:
+  frontend_next:
+  content_anon:

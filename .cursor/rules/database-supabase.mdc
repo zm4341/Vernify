@@ -1,0 +1,78 @@
+---
+description: 数据库测试与操作规范。进行 Supabase/PostgreSQL 查询、验证、调试时遵循。**必须使用 Supabase MCP**。
+alwaysApply: false
+---
+
+# 数据库测试与操作规范
+
+进行数据库相关任务（查询、测试、验证、调试、数据修复）时遵循本规范。**必须使用 Supabase MCP** 进行数据库操作。
+
+## 前置：Supabase MCP
+
+- **必选工具**：Supabase MCP（本地 Docker 配置，见 `~/.cursor/mcp.json`）
+- **数据源**：本地 Docker 中的 Supabase（开发环境 Caddy 38080，生产 Kong 34321）
+- **连接方式**：Supabase MCP 在 Docker 中 HTTP 常驻（`http://localhost:18492/mcp`），连本地 `http://host.docker.internal:38080`
+
+进行数据库相关任务时，**必须优先使用 Supabase MCP 工具**：`read_table_rows`、`create_table_records`、`update_table_records`、`delete_table_records`，不得仅凭代码或假设推断数据状态。
+
+## 核心表结构
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| courses | 课程 | id, title, slug, status |
+| lessons | 课时 | id, course_id, slug, order_index |
+| questions | 题目 | id, lesson_id, type, content |
+| submissions | 答题记录 | user_id, question_id, answer |
+| gradings | AI 批改 | submission_id, ai_score, status |
+| progress | 学习进度 | user_id, lesson_id, completed |
+| profiles | 用户资料 | id, role, grade |
+
+## 操作原则
+
+### 1. 读操作（优先 MCP）
+
+- 用 `read_table_rows` 验证数据存在性、条数、内容
+- 可加 `filters`、`limit`、`order_by` 精确查询
+- **Evidence over claims**：以 MCP 返回结果为准，不臆断
+
+### 2. 写操作（谨慎）
+
+- `create_table_records`：插入前确认外键、必填字段
+- `update_table_records`：必须带 `filters`，避免误改全表
+- `delete_table_records`：仅用于测试数据清理，**禁止删除生产核心数据**
+
+### 3. 测试与验证
+
+- 集成测试：API 断言后，可用 MCP 验证数据库实际写入
+- 数据修复：先 MCP 查询确认问题，再执行修复，最后 MCP 再次验证
+
+## 迁移与 Schema
+
+- Schema 定义在 `Web/supabase/migrations/`
+- **禁止**修改已应用的迁移文件
+- 新增迁移使用 `supabase migration new` 或手动创建
+- 写 SQL、设计表结构、加索引或做性能优化时，**同时参考 Skill**：`supabase-postgres-best-practices`（Postgres 最佳实践，见 `.cursor/skills/supabase-postgres-best-practices/`）
+
+## 与 Subagent 的配合
+
+| 场景 | 委托对象 | 说明 |
+|------|----------|------|
+| 数据库查询、验证、调试 | **database-tester** | 使用 Supabase MCP |
+| API 与 DB 联调 | api-tester + database-tester | 先 API 再 MCP 验证 |
+| 数据修复、清理 | database-tester | 谨慎执行，验证后再确认 |
+
+## 常见命令
+
+```bash
+# 确认 Docker 环境
+cd Web && docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
+
+# 直接连接 Postgres（可选）
+psql "postgresql://postgres:$POSTGRES_PASSWORD@localhost:35432/vernify"
+```
+
+## 参考
+
+- Supabase MCP 文档：https://supabase.com/docs/guides/getting-started/mcp
+- 项目 schema：`Web/supabase/migrations/001_init_schema.sql`
+- Skill（SQL/性能）：`supabase-postgres-best-practices`；Skill（MCP 操作）：`database-supabase`

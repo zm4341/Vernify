@@ -1,0 +1,118 @@
+---
+description: Spec 驱动 TDD 开发流程——先分析、模块化思维、Serena 分析、计划、测试驱动实现。参考 Superpowers、Spec Kit、OpenSpec、BMAD。
+alwaysApply: true
+---
+
+# Spec 驱动 TDD 开发流程
+
+进行功能开发、Bug 修复或重构时，按以下流程执行。**规模自适应**：简单修复可走快速路径，复杂需求走完整路径。
+
+## 架构约定（Vernify）
+
+- **主后端**：Next.js（前端 + BFF）；**扩展服务**：FastAPI 仅为 Next 提供 AI/LaTeX 等能力。详见 `project-structure.mdc`、`docs/architecture/ARCHITECTURE.md`。
+
+## 核心理念（参考开源框架）
+
+| 来源 | 理念 |
+|------|------|
+| [Superpowers](https://github.com/obra/superpowers) | 先设计再实现；Evidence over claims（验证后再声称成功）；Red-Green-Refactor |
+| [Spec Kit](https://github.com/github/spec-kit) | 规格先行，what/why 在 how 之前；多阶段精炼 |
+| [OpenSpec](https://github.com/Fission-AI/OpenSpec) | 灵活迭代、Brownfield 优先；先对齐再实现 |
+| [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) | 规模自适应；结构化工作流 |
+| [模块化编程](https://zh.wikipedia.org/wiki/模块化编程) | 高内聚低耦合；接口与实现分离 |
+
+## 编排原则（agent-orchestration）
+
+主 Agent 只负责沟通与拆解；**所有具体操作必须委托 SubAgent**。见 `agent-orchestration.mdc`。
+
+| 步骤 | 委托 SubAgent |
+|------|---------------|
+| Serena 分析 | code-navigator |
+| TDD 执行 | tdd-executor |
+| 前端验证 | browser-tester |
+| 任务收尾 | post-task-reviewer |
+
+## 流程总览
+
+```
+1. 分析（Spec-Driven Analysis）
+   → 主 Agent 明确需求、验收条件、影响范围
+2. 模块化思维
+   → 识别相关模块、接口边界、依赖关系
+3. Serena 分析代码结构
+   → 委托 code-navigator
+4. 计划（TDD Plan）
+   → 拆解为可验证的小任务
+5. 测试驱动开发（TDD）
+   → 委托 tdd-executor：Red → Green → Refactor
+6. 执行与验证
+   → 委托 browser-tester 等；Evidence over claims
+7. 任务收尾
+   → 委托 post-task-reviewer
+```
+
+## 1. 先分析（Spec-Driven Analysis）
+
+- **做什么**：澄清意图，写出验收条件；关注 **what/why**，不急于 how。
+- **产出**：问题陈述、Given/When/Then 或验收清单、影响范围、风险。
+- **澄清**：若规格模糊，先追问场景、边界、优先级（参考 Spec Kit 的 clarify）。
+- **技能**：`spec-driven-analysis`
+
+禁止在未明确「做对的标准」前就开始写代码。
+
+## 2. 模块化思维
+
+- **做什么**：识别受影响模块、接口边界、跨模块依赖。
+- **原则**：高内聚、低耦合；每个模块负责单一职责；接口与实现分离。
+- **产出**：模块清单、接口变更点、依赖顺序（供任务排序用）。
+
+## 3. Serena 分析代码结构
+
+- **做什么**：用 Serena MCP 分析符号结构、依赖、引用。
+- **常用**：`get_symbols_overview`、`find_symbol`、`find_referencing_symbols`、`list_dir`。
+- **何时**：规格明确后、制定计划前。
+- **技能**：`serena-code-structure`
+
+## 4. 计划（TDD Plan）
+
+- **做什么**：按依赖顺序拆成 2～5 分钟可完成的小任务；每项含测试（先写）与实现（后写）。
+- **原则**：YAGNI、DRY；任务按模块依赖排序。
+- **框架/库 API**：实现涉及 Next.js、React、Supabase、FastAPI 等时，**先查 Context7** 获取当前版本文档与示例，再写代码。涉及 **Vercel AI SDK**（streamText、useChat、Agent、流式、STT/TTS）时，引用 **ai-sdk** skill（`.agents/skills/ai-sdk`）。
+- **页面与 MDX**：若任务涉及**新建或修改展示内容的页面**，按 **mdx-evaluation.mdc** 评估是否使用 MDX 渲染（有 Markdown 源且需富格式则用；登录/注册/聊天/Admin 等则不必用）。
+- **参考**：Superpowers writing-plans、Spec Kit tasks、BMAD create-epics-and-stories。
+
+## 5. 测试驱动开发（TDD）
+
+- **顺序**：Red（失败测试）→ Green（最小实现）→ Refactor（可选）。
+- **原则**：不写无对应测试的生产代码；测试必须曾失败且失败原因明确。
+- **两阶段验收**（参考 Superpowers subagent-driven-development）：先检查是否符合规格，再检查代码质量。
+- **技能**：`tdd-plan-and-implement`
+
+## 6. 执行与验证
+
+- **verification-before-completion**：必须有测试通过或浏览器验证的**证据**（命令输出、截图），不得仅声称完成。
+- **工具**：`tdd-executor`（多任务）、`browser-tester`（前端/E2E）。
+- **前端/E2E**：涉及页面或前端时，**必须自动**使用 Chrome DevTools MCP（或委托 browser-tester），不得跳过。
+
+## 7. 任务完成后必做流程（post-task-workflow）
+
+流程结束后，**必须**执行 `post-task-workflow.mdc`：Graphiti 检查 → Serena 分析 → 重构 → 更新文档 → 同步 Rules/Skills/SubAgents/Commands → Graphiti 记录。可运行 `/post-task-review` 或委托 post-task-reviewer。
+
+## 规模自适应
+
+| 场景 | 路径 | 可简化步骤 |
+|------|------|------------|
+| 小 Bug、typo、单文件修改 | 快速路径 | 分析可口头确认；Serena 可只查引用 |
+| 新功能、跨模块修改、重构 | 完整路径 | 不跳过任何步骤 |
+
+## 与 page-maker 的关系
+
+- **页面/UI 修改**：可先走 **page-maker**（设计系统 + 代码实现 + 验证），再走本流程做逻辑/测试。
+- **纯逻辑/配置/扩展服务（FastAPI）**：直接走本流程。
+
+## 参考
+
+- [Superpowers](https://github.com/obra/superpowers)
+- [Spec Kit](https://github.com/github/spec-kit)
+- [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+- [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD)

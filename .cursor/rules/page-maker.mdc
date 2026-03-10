@@ -1,0 +1,100 @@
+---
+description: 页面制作与重构规范（落地页、课程页、Admin 等）
+globs: Web/app/**/*.tsx, Web/components/**/*.tsx
+alwaysApply: false
+---
+
+# 页面制作规范
+
+## 目标
+
+制作或修改 Vernify 页面时，遵循统一流程：**Graphiti 检索** → **读取项目文档** → **设计系统确认** → 代码实现 → 验证。
+
+## 页面设计必做流程（强制）
+
+设计或修改任何页面**之前**，必须完成：
+
+1. **Graphiti 检索**：委托 **graphiti-memory** 或使用 Graphiti MCP（`search_nodes`、`search_memory_facts`）检索与页面设计相关的偏好、程序、事实；遵循检索结果中的设计约定。
+2. **读取项目文档**：至少阅读 `docs/architecture/ARCHITECTURE.md`、`docs/architecture/PRD.md`；若存在设计规范文档（如 `docs/architecture/DESIGN.md`）则一并阅读。
+3. **参考现有页面**：参考目标类型对应页面（如课程详情 `app/courses/[id]`、Admin 子页）的 DOM 结构、组件与样式，保持风格一致。
+
+**谁执行**：主 Agent 收到页面设计请求时，必须先委托 graphiti-memory 检索、必要时读文档，再将完整上下文传给 **page-maker** SubAgent；page-maker 收到任务后也应先检索 Graphiti、读项目文档，再执行设计。
+
+## 设计阶段必用
+
+**设计页面时，必须**：
+1. **ui-ux-pro-max Skill**（必用）：用于生成或确认设计系统（风格、配色、字体）；新页面、改版、风格调整均须调用。
+2. **Graphiti 检索**：委托 graphiti-memory 或使用 Graphiti MCP 检索与页面设计相关的偏好、程序、事实；遵循检索到的设计约定。
+3. **项目文档**：至少阅读 `docs/architecture/ARCHITECTURE.md`、`docs/architecture/PRD.md`；若存在设计规范（如 `docs/architecture/DESIGN.md`）则一并阅读；参考 `.cursor/rules` 下的 page-maker、font-lxgw-wenkai、mdx-evaluation 等。
+
+## 协作工具
+
+| 工具 | 用途 | 何时使用 |
+|------|------|----------|
+| **ui-ux-pro-max** | 设计系统（风格、配色、字体） | **必用**：新页面、改版、风格调整 |
+| **frontend-design** | 差异化审美、生产级界面（排版/色彩/动效/布局） | 需要强辨识度、避免通用 AI 审美时 |
+| **vercel-react-best-practices** | React/Next.js 性能与最佳实践 | 实现与重构时参考 |
+| **web-design-guidelines** | 可访问性、设计审计、Web 最佳实践 | 审查 UI、做可访问性检查时 |
+| **ai-sdk** | Vercel AI SDK（streamText、useChat、流式、Agent、STT/TTS） | 做 AI 对话页、流式输出、口语练习等时（Marketplace，`.agents/skills/ai-sdk`） |
+| **browser-tester** | 浏览器验证 | 实现完成后做视觉与交互检查 |
+
+## 架构约定
+
+- **主后端**：Next.js（前端 + BFF，`app/api/*`），处理所有 `/api/v1/*` 请求
+- **扩展服务**：FastAPI（`Web/backend/`）仅为 Next 提供 AI、LaTeX 等能力，不对外暴露；Caddy 不访问 FastAPI
+- 详见 `docs/architecture/ARCHITECTURE.md`、`project-structure.mdc`
+
+## 技术栈（Vernify）
+
+- **框架**：Next.js 16 App Router
+- **样式**：Tailwind CSS 3.4 + DaisyUI
+- **动效**：Framer Motion + GSAP
+- **字体**：LXGW WenKai（正文）、可选系统字体
+- **目录**：`Web/app/` 页面、`Web/components/` 组件
+
+## 页面类型
+
+| 类型 | 路径示例 | 说明 |
+|------|----------|------|
+| 落地页 | `app/page.tsx` + `LandingClient` | 未登录公开页 |
+| 课程列表 | `app/courses/page.tsx` | 挑选课程 |
+| 课时页 | `app/lessons/[slug]/page.tsx` | 学习内容（**MDX** 渲染：Markdown + JSX、FadeIn/LetterByLetter/SlideUp 动画） |
+| Admin | `app/admin/latex-sync/page.tsx` | 管理后台 |
+
+## 流程（适用于新建、重构、任何页面修改）
+
+1. **Graphiti 检索**（必做）：委托 graphiti-memory 或使用 Graphiti MCP 检索与页面设计相关的偏好、程序、事实；遵循检索到的设计约定。
+2. **读取项目文档**（必做）：至少阅读 `docs/architecture/ARCHITECTURE.md`、`docs/architecture/PRD.md`；若存在设计规范则一并阅读。
+3. **明确目标**：页面类型、功能与布局需求
+4. **MDX 评估**：按 `mdx-evaluation.mdc` 评估该页面是否需用 MDX 渲染（有 Markdown 源且需富格式则用 MDX，否则不用）
+5. **设计系统（必用 ui-ux-pro-max）**：必须调用 **ui-ux-pro-max** Skill 生成或确认风格、配色、字体；遵循 `font-lxgw-wenkai.mdc` 与项目设计系统
+6. **代码实现**：在 `Web/app/` 或 `Web/components/` 下实现或修改；若需 MDX，参考 `lib/mdx.tsx`、课时页 `mdxComponents`
+7. **验证**：用 browser-tester 做视觉与交互检查；可选用 **web-design-guidelines** 做可访问性/设计审计
+
+## 强制使用
+
+- **页面设计任务必须**：委托 **page-maker** SubAgent 执行；主 Agent 不得直接改页面代码
+- **删除或修改 UI 元素、链接、样式、布局等，均视为页面修改**，必须委托 page-maker，不区分改动大小
+- **必须使用**：page-maker Skill（`.cursor/skills/page-maker/SKILL.md`）、page-maker Rule（本文件）、`/page-maker` Command
+
+## 相关 Rules
+
+- **mdx-evaluation.mdc**：新页面必须评估是否使用 MDX 渲染；有 Markdown 源且需富格式则用，否则不用
+
+## 参考 Skill
+
+- **设计系统（必用）**：**ui-ux-pro-max** — 页面设计必须调用此 Skill 生成或确认设计系统
+- 差异化界面：frontend-design（Context7 注册表）
+- 性能与实现：vercel-react-best-practices（Context7 注册表）
+- 审查与可访问性：web-design-guidelines（Context7 注册表）
+- AI 对话/流式/语音：ai-sdk（Marketplace，`.agents/skills/ai-sdk`）
+
+## 完成后必做
+
+page-maker 完成页面修改后，主 Agent 收到汇报**必须立即**委托 **post-task-reviewer**（或 docs-updater + graphiti-memory）进行查询与记录，不得跳过、不得等用户提醒。见 `auto-record-changes.mdc`。
+
+## 禁止
+
+- 不在项目根目录创建前端文件
+- 不破坏现有路由与数据流
+- 不做与设计系统冲突的风格（如突兀配色、字体）

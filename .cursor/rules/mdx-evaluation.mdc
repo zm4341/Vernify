@@ -1,0 +1,54 @@
+---
+description: 新页面开发时是否使用 MDX 渲染的评估规范
+globs: Web/app/**/*.tsx, Web/components/**/*.tsx
+alwaysApply: false
+---
+
+# MDX 渲染评估规范
+
+## 架构约定
+
+- **主后端**：Next.js（前端 + BFF）；**扩展服务**：FastAPI 仅为 Next 提供 AI/LaTeX 等能力。详见 `project-structure.mdc`。
+
+## 原则
+
+**开发新页面时，必须先评估该页面是否需要使用 MDX 渲染内容。**  
+MDX 用于渲染 Markdown/MDX 字符串（来自数据库或内容文件），支持富文本与自定义 React 组件。
+
+## 何时使用 MDX
+
+| 页面类型 | 建议 | 理由 |
+|----------|------|------|
+| 课时正文 | ✅ 必须 | 内容来自 DB `content_source`，需 Markdown + JSX、动画组件 |
+| 课程描述 | ✅ 必须 | `course.description` 支持 Markdown，可嵌入链接、加粗等 |
+| 落地页 Hero / 功能介绍 | ✅ 建议 | 富文本多、常调整，MDX 便于内容分离与富格式 |
+| 其他富文本区块 | ✅ 评估 | 若内容来自 CMS/DB 或需 Markdown，使用 MDX |
+
+## 何时不必用 MDX
+
+| 页面类型 | 建议 | 理由 |
+|----------|------|------|
+| 登录 / 注册 | ❌ 不需要 | 表单为主，文案少，MDX 无收益 |
+| 聊天 | ❌ 不需要 | 对话 UI 为主，与 MDX 场景不匹配 |
+| Admin | ❌ 不需要 | 管理界面为主，操作型页面 |
+| 纯交互 / 纯表单 | ❌ 不需要 | 无 Markdown 源，MDX 是过度设计 |
+
+## 评估流程（新页面必做）
+
+1. **识别内容来源**：该页面是否有来自 DB/CMS/配置的 Markdown 或 MDX 字符串？
+2. **判断富文本需求**：是否需要支持粗体、链接、列表、代码块或自定义组件？
+3. **决策**：
+   - 有 Markdown 源且需富格式 → 使用 MDX（`lib/mdx.tsx` 的 `MdxText` 或课时页 `mdxComponents`）
+   - 无 Markdown 源或纯表单/操作 → 不使用 MDX
+
+## 现有 MDX 用法
+
+- **课时页**：`app/lessons/[slug]/page.tsx`，用 `next-mdx-remote/rsc` 渲染 `content_source`
+- **课程描述**：`lib/mdx.tsx` 的 `MdxText`，用于课程列表与详情页描述
+- **组件**：`components/ContentAnimation.tsx` 中的 FadeIn、LetterByLetter、SlideUp 等
+
+## 参考
+
+- Rule: `page-maker.mdc`（页面制作流程含 MDX 评估）
+- Skill: `page-maker/SKILL.md`
+- Subagent: `page-maker.md`

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "hooks/session-init.sh"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "hooks/format.sh"
+      }
+    ]
+  }
+}

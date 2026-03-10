@@ -1,0 +1,135 @@
+---
+description: 项目配置和文档维护规范
+alwaysApply: true
+---
+
+# 项目配置维护规范
+
+当项目发生以下变更时，必须同步更新相关配置和文档。**完成任一「需要更新的场景」后，必须执行下方「更新流程」全部步骤（含最后一步：写入 Graphiti），否则视为未完成。**
+
+## 编排原则（agent-orchestration）
+
+- **docs/** 等架构/业务文档：委托 **docs-updater** SubAgent
+- **.cursor/** 配置（Rules、SubAgents、Skills、Commands）：委托 **project-updater** SubAgent
+- 主 Agent 不直接改文件。见 `agent-orchestration.mdc`、`docs-updater.mdc`。
+
+## 创建文件前必做
+
+**创建任何新文件前**（含文档、Rule、Skill、SubAgent、Command 等），必须先：
+
+1. **查询 docs/**：检查 docs/ 下是否已有同类或相关文档
+2. **查询 Graphiti**：检索与主题相关的既有记忆、程序、事实
+3. **查询 Serena**：若涉及代码，用 Serena 分析相关结构与放置位置
+4. **分析必要性**：明确要创建的文件类型、应放置的路径、是否与既有内容重复、为何必须新建
+5. **记录新建原因**：确需新建时，在 MIGRATION.md 或相关文档中记录新建理由
+
+**不创建重复文档**：主要宗旨；优先修改现有文件，仅当确需新建时走非常严谨流程（创建前必查、必要性分析、记录新建原因）。详见 `docs/DOCUMENT-CONVENTIONS.md`。docs-updater、project-updater 在创建新文件时均遵循此流程。
+
+## Rules、Skills、SubAgents、Commands 创建约定
+
+### 1. 创建前必查
+
+**在创建新的 Rule、Skill、SubAgent 或 Command 前，必须：**
+
+- **查询**：在 `docs/`、`.cursor/rules/`、`.cursor/skills/`、`.cursor/agents/`、`.cursor/commands/` 中检查是否已有类似或可复用的配置
+- **优先修改现有**：若有现成文件，优先修改或扩展，不新建 v1/v2/_old/_new 等多版本
+- **若无再建**：仅当无现成配置可满足需求时，才考虑新建；新建须非常严谨，完成上述查询、必要性分析及记录新建原因
+
+### 2. 原子化与配合
+
+- **Skills**：尽量原子化，每个 Skill 完成一个明确的小任务或流程，可被多个 SubAgent、Command 组合使用；避免大而全的单体
+- **Commands**：原子化，每个 Command 触发一个明确动作，可委托对应 SubAgent 或组合多个 Skill
+- **配合**：Skills、Commands 应与 Rules、SubAgents 可组合使用，避免重复造轮子；可独立使用，也可与 Rules/SubAgents 组合
+
+### 3. 新建时尽量配套
+
+新建时尽量配套 Rule + Skill + SubAgent + Command，使能力可被发现、可被委托、可被触发。参考 create-rule SKILL、create-skill SKILL。
+
+## 架构约定
+
+- **主后端**：Next.js（前端 + BFF）；**扩展服务**：FastAPI 仅为 Next 提供 AI/LaTeX 等能力。详见 `project-structure.mdc`、`docs/architecture/ARCHITECTURE.md`。
+
+## 时间与检索约定
+
+- **当前年份**：**2026 年**。检索资料、查「最近」「今年」「近期」、找技术/框架/文档时，一律按 2026 年作为时间基准。
+- 已写入 Graphiti；记忆统一使用 Graphiti，不再使用 `.cursor/memories/`。
+
+## 需要更新的场景
+
+### 1. 技术栈升级
+当升级主要依赖（Next.js、React、Python 等）时：
+- ✅ 更新 `.cursor/rules/project-structure.mdc` 中的版本号
+- ✅ 记录 breaking changes 和兼容性约定
+- ✅ 更新相关 SubAgent 的知识库
+
+### 2. 新增服务或组件
+当添加新的 Docker 服务、API 路由、组件库时：
+- ✅ 更新 `project-structure.mdc` 的目录结构
+- ✅ 更新命令速查
+- ✅ 考虑是否需要新的 SubAgent
+
+### 3. 架构调整
+当修改部署方式、数据库schema、API 设计时：
+- ✅ 更新 `project-structure.mdc` 的架构说明
+- ✅ 更新相关 SubAgent（如 docker-expert、api-tester）
+- ✅ 记录迁移步骤
+
+### 4. 开发规范变更
+当团队约定新的代码规范、命名规则时：
+- ✅ 更新 `project-structure.mdc` 的约定部分
+- ✅ 考虑创建新的 Rule（如果需要文件级别的规则）
+
+### 5. LLM / LiteLLM / 模型列表变更
+当修改 LLM、LiteLLM、批改服务、模型列表、OpenRouter 等配置时：
+- ✅ **llm-config** 子代理完成修改后**必须**委托记录流程（见 `llm-config.mdc`）
+- ✅ 委托 **project-updater** 更新 MIGRATION.md
+- ✅ 委托 **docs-updater** 更新相关文档（如 TECH-STACK-ANALYSIS 若含模型说明）
+- ✅ 委托 **graphiti-memory** 写入变更摘要
+
+### 6. .cursor/rules/、agents、skills、commands 变更且影响根目录 .cursorrules
+当更新 **.cursor/rules/**、agents、skills、commands 时，若变更影响根目录 **.cursorrules** 的摘要（如任务前必做、规则入口、委托约定、禁止项等），**须同步更新根目录 `.cursorrules`**，保持与 .cursor/rules/ 一致。由 **project-updater** 在本次流程内完成。
+
+## 更新流程
+
+1. **识别影响范围** - 哪些配置文件需要更新
+2. **更新配置** - 修改 Rules、SubAgents
+3. **验证完整性** - 确保配置之间没有冲突
+4. **记录变更** - 在 `.cursor/MIGRATION.md` 中记录重大变更
+5. **写入 Graphiti** - 完成上述任何维护任务后，**必须**用 Graphiti MCP 的 `add_memory` 记录本次变更摘要（做了什么、关键结果），不可遗漏。**按文档整体重构记忆**：写入时需根据所有 Vernify 文档理解整体重构记忆（删除/修正错误、使全部记忆与文档一致），不只追加；若发现既有记忆与当前事实不符，先修正错误记忆（删除或改写）再写入。见 `.cursor/rules/graphiti-memory.mdc`。
+
+## 与 post-task-workflow 的关系
+
+完成本规范涉及的任一类维护后，**必须**再执行 **post-task-workflow**（见 `post-task-workflow.mdc`）：Graphiti 检查 → Serena 分析 → 重构 → 更新文档 → 同步 Rules/Skills/SubAgents/Commands → Graphiti 记录。
+
+## 配置文件清单
+
+### Rules
+- `task-priority-workflow.mdc` - 任务前后必做（查询→做→更新文档→记录），最高优先级、自动化
+- `agent-orchestration.mdc` - 主 Agent 编排原则（委托优先）
+- `auto-record-changes.mdc` - SubAgent 完成变更后必须自动查询与记录，主 Agent 第一动作为委托 post-task-reviewer
+- `project-structure.mdc` - 项目结构和技术栈
+- `project-maintenance.mdc` - 本文件，维护规范
+- `post-task-workflow.mdc` - 任务完成后必做流程
+- `refactor-convention.mdc` - 重构约定（简化结构、突出主干、移除冗余，不堆叠补充节点）
+- `llm-config.mdc` - LLM/LiteLLM 配置变更后必须委托记录（见需要更新的场景 §5）
+
+### SubAgents
+- `docker-expert.md` - Docker 配置
+- `latex-expert.md` - 内容编译
+- `api-tester.md` - API 测试
+- `frontend-reviewer.md` - 前端代码审查
+- `llm-config.md` - LLM 配置
+- `docs-updater.md` - 项目文档更新（docs/、docs/architecture/ARCHITECTURE.md）
+- `project-updater.md` - 项目配置维护（.cursor/ Rules、SubAgents、Skills、Commands）
+- `post-task-reviewer.md` - 任务完成后必做流程
+
+### Skills
+- 8 个通用工具 skills
+
+## 维护原则
+
+- 📝 **及时更新** - 技术变更时立即更新文档
+- 🎯 **具体明确** - 避免模糊的描述，提供具体版本号和配置
+- 🔗 **保持关联** - 相关配置文件之间保持一致性
+- 📚 **记录历史** - 重大变更记录在 MIGRATION.md
+- 🧠 **任务后必记** - 完成本规范涉及的任一类维护后，**必须**在 Graphiti 中写入本次变更，否则视为未完成。

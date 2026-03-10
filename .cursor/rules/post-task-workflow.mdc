@@ -1,0 +1,54 @@
+---
+description: 任务完成后的必做流程——Graphiti 检查 → Serena 分析重构 → 更新文档 → 同步 Rules/Skills/SubAgents/Commands → Graphiti 记录。完成任何有实际变更或得出结论的任务后必须执行。最高优先级，自动化。
+alwaysApply: true
+---
+
+# 任务完成后必做流程
+
+**完成任何有实际变更或得出结论的任务后**（含查询类任务得出结论），必须执行以下两条规则，**不得遗漏**。**最高优先级，自动化**，主 Agent 和 SubAgent 均须遵循，无需用户提醒。见 `task-priority-workflow.mdc`。
+
+## 交付前（与 task-priority-workflow 一致）
+
+- 交付前必须确保**构建通过**、**已知错误已修复**；主 Agent 与 SubAgent 应自动修复构建错误和已知错误，不交付带构建失败或已知 bug 的结果。
+
+## 规则一：变更检查与重构流程
+
+1. **Graphiti 检查** - 用 Graphiti MCP 检索本次任务相关的既有记录，确认已做事项与上下文
+2. **修正错误记忆** - 若发现既有记忆与当前事实不符（错误、过时、被推翻），先用 `delete_entity_edge` 或 `delete_episode` 删除错误记忆，再写入正确内容；不得仅追加新记忆。见 `graphiti-memory.mdc`。
+3. **Serena 分析** - 用 Serena MCP 分析相关代码的符号结构、依赖与引用，识别架构问题
+4. **重构** - 根据 Serena 分析结论进行必要重构；遵循 `refactor-convention.mdc`：**简化结构、突出主干、移除冗余**，不通过添加补充节点堆叠信息（高内聚低耦合、接口与实现分离）
+5. **更新文档** - 委托 **docs-updater** 更新 `docs/`（含 docs/architecture/ARCHITECTURE.md）等；委托 **project-updater** 更新 .cursor/ 配置；MIGRATION.md 由执行者记录
+6. **Graphiti 记录** - 用 Graphiti 的 `add_memory` 记录本次变更摘要（本 MCP 无 add_episode）；**记录时按文档整体重构记忆**：需根据所有 Vernify 文档理解整体重构记忆（删除/修正错误、使全部记忆与文档一致），不只追加。见 `graphiti-memory.mdc`
+
+## 规则二：知识同步流程
+
+1. **更新配置** - 更新所有受影响的 Rules、Skills、SubAgents、Commands，使其理解本次变更
+2. **记录** - 在相关文档中记录更新；用 Graphiti 写入本次配置变更，便于后续检索；写入前若发现错误记忆，按 graphiti-memory 约定先修正再写入
+
+## 触发方式
+
+- **自动化**：有了结论后，主 Agent **必须主动**委托 **post-task-reviewer** 执行完整流程，不等待用户提醒
+- **SubAgent 完成变更后**：主 Agent 收到 SubAgent（page-maker、frontend-reviewer、code-navigator 等）汇报的**第一动作**为委托 post-task-reviewer；不得跳过、不得等用户提醒。见 `auto-record-changes.mdc`。
+- **委托优先**：按 `agent-orchestration.mdc`，主 Agent 必须委托 post-task-reviewer，不直接操作
+- **命令触发**：可运行 `/post-task-review`，主 Agent 委托 post-task-reviewer 执行
+
+## 与现有规则的配合
+
+| 规则/技能 | 说明 |
+|-----------|------|
+| `graphiti-memory.mdc` | 任务前后均使用 Graphiti；本流程为任务后必做 |
+| `serena-code-structure` | Serena 分析遵循其步骤与模块化思维 |
+| `project-maintenance.mdc` | 若涉及技术栈/架构/服务变更，需按 project-maintenance 更新配置 |
+| `spec-driven-tdd.mdc` | 若走 Spec 驱动 TDD，流程结束后**必须**执行本流程 |
+
+## 规模自适应
+
+- **小变更**（typo、单行修复）：Graphiti 检查与记录可简化；Serena 可只查引用
+- **大变更**（新功能、跨模块、架构调整）：必须走完整流程
+
+## 参考
+
+- `refactor-convention.mdc` - 重构含义约定（简化结构、突出主干、移除冗余，不堆叠补充节点）
+- 技能：`post-task-workflow`
+- SubAgent：`post-task-reviewer`
+- Command：`/post-task-review`

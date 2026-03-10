@@ -1,0 +1,320 @@
+# Vernify 全栈 Docker Compose 配置
+# 用法: docker compose up -d
+
+name: vernify
+
+services:
+  # ===========================================
+  # 反向代理 - Caddy
+  # ===========================================
+  caddy:
+    build:
+      context: ./caddy
+      dockerfile: Dockerfile
+    container_name: Vernify-caddy
+    restart: unless-stopped
+    ports:
+      - "38080:80"
+      - "38443:443"
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:-localhost}
+      - API_ADDRESS=${API_ADDRESS:-api.localhost}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - vernify-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===========================================
+  # 前端 - Next.js
+  # ===========================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+        # 浏览器经 Caddy 访问 Supabase，与访问页同源
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://127.0.0.1:38080}
+    container_name: Vernify-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-http://localhost:54321}
+      # 与 Kong 一致，避免 401 Invalid authentication credentials
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      # 服务端访问 Supabase（Docker 内部网络，生产环境通过 Caddy 时改 caddy:80）
+      - SUPABASE_SERVER_URL=${SUPABASE_SERVER_URL:-http://supabase-kong:8000}
+    depends_on:
+      - backend
+    networks:
+      - vernify-network
+
+  # ===========================================
+  # 扩展服务 - FastAPI（非主后端，仅为 Next 提供 AI/LaTeX 等能力）
+  # ===========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: Vernify-backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SUPABASE_URL=${SUPABASE_URL:-http://supabase-kong:8000}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      # LLM 配置 (LiteLLM)
+      - LLM_MODEL=${LLM_MODEL:-gemini/gemini-3-pro-preview}
+      - LLM_FALLBACK_MODELS=${LLM_FALLBACK_MODELS:-openrouter/openai/gpt-5.2,openrouter/openai/gpt-5.mini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG:-false}
+    ports:
+      - "38000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - vernify-network
+    # 已移除 content volume：LaTeX 扫描/同步在 Docker 中不可用（需本地 compiler），
+    # 课时正文来自 DB lessons.content_source，不再依赖挂载 content 目录
+
+  # ===========================================
+  # 后台任务 - Celery Worker
+  # ===========================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: Vernify-worker
+    restart: unless-stopped
+    command: celery -A app.workers.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/1}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+      # LLM 配置 (LiteLLM)
+      - LLM_MODEL=${LLM_MODEL:-gemini/gemini-3-pro-preview}
+      - LLM_FALLBACK_MODELS=${LLM_FALLBACK_MODELS:-openrouter/openai/gpt-5.2,openrouter/openai/gpt-5.mini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - vernify-network
+
+  # ===========================================
+  # 数据库 - PostgreSQL
+  # ===========================================
+  db:
+    image: postgres:15-alpine
+    container_name: Vernify-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-vernify}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vernify}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "35432:5432"
+    networks:
+      - vernify-network
+
+  # ===========================================
+  # 缓存/消息队列 - Redis
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: Vernify-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "36379:6379"
+    networks:
+      - vernify-network
+
+  # ===========================================
+  # Supabase 服务 (Auth, Storage, Realtime)
+  # ===========================================
+  # 注意: 完整的 Supabase 自托管需要多个容器
+  # 这里使用简化版，完整版请参考:
+  # https://github.com/supabase/supabase/tree/master/docker
+  
+  supabase-studio:
+    image: supabase/studio:latest
+    container_name: Vernify-supabase-studio
+    restart: unless-stopped
+    environment:
+      - STUDIO_PG_META_URL=http://supabase-meta:8080
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DEFAULT_ORGANIZATION_NAME=Vernify
+      - DEFAULT_PROJECT_NAME=Vernify LMS
+      - SUPABASE_URL=http://supabase-kong:8000
+      - SUPABASE_PUBLIC_URL=${SUPABASE_URL:-http://localhost:54321}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    ports:
+      - "34323:3000"
+    depends_on:
+      - db
+    networks:
+      - vernify-network
+
+  supabase-kong:
+    build:
+      context: ./supabase
+      dockerfile: Dockerfile.kong
+    image: vernify-kong:local
+    container_name: Vernify-supabase-kong
+    restart: unless-stopped
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DNS_ORDER=LAST,A,CNAME
+      - KONG_PLUGINS=request-transformer,cors,key-auth,acl
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    ports:
+      - "34321:8000"
+      - "34322:8443"
+    depends_on:
+      - supabase-auth
+      - supabase-rest
+    networks:
+      - vernify-network
+
+  supabase-auth:
+    image: supabase/gotrue:v2.186.0
+    container_name: Vernify-supabase-auth
+    restart: unless-stopped
+    environment:
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - API_EXTERNAL_URL=${SUPABASE_URL:-http://localhost:54321}
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vernify}?search_path=auth
+      - GOTRUE_SITE_URL=${SITE_URL:-http://localhost:3000}
+      - GOTRUE_URI_ALLOW_LIST=${ADDITIONAL_REDIRECT_URLS}
+      - GOTRUE_DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}
+      - GOTRUE_JWT_ADMIN_ROLES=service_role
+      - GOTRUE_JWT_AUD=authenticated
+      - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
+      - GOTRUE_JWT_EXP=${JWT_EXPIRY:-3600}
+      - GOTRUE_JWT_SECRET=${JWT_SECRET}
+      - GOTRUE_EXTERNAL_EMAIL_ENABLED=true
+      - GOTRUE_MAILER_AUTOCONFIRM=true
+      # SMTP：不配置则验证码邮件不会发到真实邮箱（仅 API 成功）
+      - GOTRUE_SMTP_HOST=${GOTRUE_SMTP_HOST:-}
+      - GOTRUE_SMTP_PORT=${GOTRUE_SMTP_PORT:-587}
+      - GOTRUE_SMTP_USER=${GOTRUE_SMTP_USER:-}
+      - GOTRUE_SMTP_PASS=${GOTRUE_SMTP_PASS:-}
+      - GOTRUE_SMTP_ADMIN_EMAIL=${GOTRUE_SMTP_ADMIN_EMAIL:-}
+      - GOTRUE_SMTP_SENDER_NAME=${GOTRUE_SMTP_SENDER_NAME:-Vernify}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vernify-network
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.95.2
+    container_name: Vernify-supabase-meta
+    restart: unless-stopped
+    environment:
+      - PG_META_PORT=8080
+      - PG_META_DB_HOST=db
+      - PG_META_DB_PORT=5432
+      - PG_META_DB_NAME=${POSTGRES_DB:-vernify}
+      - PG_META_DB_USER=${POSTGRES_USER:-postgres}
+      - PG_META_DB_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vernify-network
+
+  # ===========================================
+  # PostgREST - REST API 服务
+  # ===========================================
+  supabase-rest:
+    image: postgrest/postgrest:v14.2
+    container_name: Vernify-supabase-rest
+    restart: unless-stopped
+    environment:
+      - PGRST_DB_URI=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vernify}
+      - PGRST_DB_SCHEMAS=public
+      - PGRST_DB_ANON_ROLE=postgres
+      - PGRST_JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vernify-network
+
+  supabase-storage:
+    image: supabase/storage-api:latest
+    container_name: Vernify-supabase-storage
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      supabase-rest:
+        condition: service_started
+    environment:
+      - ANON_KEY=${SUPABASE_ANON_KEY}
+      - SERVICE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - POSTGREST_URL=http://supabase-rest:3000
+      - PGRST_JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vernify}
+      - FILE_SIZE_LIMIT=52428800
+      - STORAGE_BACKEND=file
+      - FILE_STORAGE_BACKEND_PATH=/var/lib/storage
+      - TENANT_ID=stub
+      - REGION=stub
+      - GLOBAL_S3_BUCKET=stub
+    volumes:
+      - storage_data:/var/lib/storage
+    networks:
+      - vernify-network
+
+networks:
+  vernify-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+  storage_data:

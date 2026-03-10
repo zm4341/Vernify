@@ -1,0 +1,40 @@
+# Lattice 项目规则摘要（根目录入口）
+
+供 **Claude Code** 等仅从根目录读取规则的工具使用。完整规则在 `.cursor/rules/`，本文件为摘要与指针。
+
+**同步约定**：文档（docs/）或规则（.cursor/rules/）有重大更新时，须同步更新本文件，使摘要与 docs/、.cursor/rules/ 一致。
+
+## 项目简介
+
+- **Lattice**：教育科技全栈。Next.js 16 为前端 + 主后端（BFF），FastAPI 为扩展服务（AI、LaTeX 等），Supabase 为数据库。
+- 请求流：浏览器 → Caddy → Next.js；AI/LaTeX 由 Next 内部调用 FastAPI，不对外暴露。
+
+## 目录约定
+
+- **Web/** 为应用根：前端（app/、components/、lib/）、主后端（app/api/*）、FastAPI 扩展（backend/）、Docker、Supabase、Caddy 均在 Web/。
+- 根目录无 `app/`、`components/`、`package.json`；所有命令在 `Web/` 下执行（如 `cd Web && npm run build`、`docker compose`）。
+
+## 文档根
+
+- 所有文档在 **docs/**。规范见 `docs/DOCUMENT-CONVENTIONS.md`（不创建重复文档、新建须非常严谨）。
+
+## 规则入口
+
+- 完整规则在 **.cursor/rules/**，例如 `project-structure.mdc`、`agent-orchestration.mdc`、`task-priority-workflow.mdc`、`post-task-workflow.mdc`。
+- 在满足规则前提下，优先**一次选对路径、少重复探索**，以控制上下文与 Token。
+- 任务开始先做 **Graphiti 检索**（与当前任务相关的偏好、程序、事实）；涉及代码分析、查找、重构时委托 code-navigator（Serena）。
+- 页面/UI 修改（含 Web/app/、Web/components/ 下任何写操作）须委托 **page-maker**，主 Agent 不得直接改页面代码。
+
+## 运行方式
+
+- **所有服务在 Docker 中运行**。不混用本机 `npm run dev` 或 `uvicorn`。
+- 开发：`cd Web && docker compose -f docker-compose.yml -f docker-compose.dev.yml -p lattice up -d`
+- 入口：http://127.0.0.1:38080/
+
+## 协作（Claude Code × Cursor）
+
+- 共享 **Graphiti**（group_id: lattice）与 **docs/**；Cursor 可用 **/use-claude-code** 将 CLI 类任务（git/构建/测试等）委托给 Claude Code；分工与协议见根目录 `CLAUDE.md`、`.agents/skills/claude-code-bridge/SKILL.md`。
+
+## 禁止
+
+- 不在根目录创建前端文件或 package.json；不修改已应用的数据库迁移文件。

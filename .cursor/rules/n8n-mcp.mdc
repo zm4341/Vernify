@@ -1,0 +1,45 @@
+---
+description: n8n-mcp 使用约定——社区版 MCP 替换内置 n8n MCP，创建/管理 workflow 时委托 n8n-workflow SubAgent，并参考 n8n 官方 Hosting 文档。
+globs: 
+alwaysApply: false
+---
+
+# n8n-mcp 使用约定
+
+## 当前 MCP 配置
+
+- **Cursor**：使用社区版 **n8n-mcp**（[czlonkowski/n8n-mcp](https://github.com/czlonkowski/n8n-mcp)），配置于 `~/.cursor/mcp.json` 的 `n8n-mcp` 条目。
+- **运行方式**：`npx n8n-mcp`，需环境变量 `MCP_MODE=stdio`、`N8N_API_URL`、`N8N_API_KEY`（在 n8n 设置 → n8n API 中创建）。
+- **能力**：节点/模板搜索、节点详情、配置校验、**创建/更新/删除/执行 workflow**（需配置 N8N_API_URL + N8N_API_KEY）。
+
+## 何时委托 n8n-workflow SubAgent
+
+涉及以下任务时，主 Agent **必须**委托 **n8n-workflow** SubAgent，不得自行调用 n8n-mcp 工具完成整条链路：
+
+- 创建新 workflow、从模板部署
+- 更新已有 workflow（增删改节点、连线）
+- 校验 workflow 或节点配置
+- 执行/测试 workflow、查看执行结果
+
+主 Agent 负责理解需求、拆解步骤、汇总反馈；具体 MCP 调用由 n8n-workflow 执行。
+
+## n8n-skills
+
+- **用途**：7 个互补技能，规范 n8n 表达式、MCP 工具用法、工作流模式、校验与 Code 节点等。
+- **安装**：Claude Code 推荐 `/plugin install czlonkowski/n8n-skills`；详见 `docs/n8n-mcp-and-claude-code.md`。
+- **与 Cursor**：Cursor 侧通过 `.agents/skills/n8n-workflow/SKILL.md` 与 n8n-workflow SubAgent 配合；建 workflow 时优先模板、多级校验、显式配置参数（勿信任默认值）。
+
+## 安全与参考
+
+- **勿直接编辑生产 workflow**：先复制、在开发环境测试、校验后再部署。
+- **官方文档**：[n8n Hosting](https://docs.n8n.io/hosting/)（安装、配置、安全、扩展等）。
+
+## 触发方式
+
+- **斜杠命令**：用户输入 **/n8n-workflow**（可带任务描述）时，主 Agent 委托 n8n-workflow SubAgent；定义见 `.cursor/commands/n8n-workflow.md`。
+
+## 参考
+
+- SubAgent：`.cursor/agents/n8n-workflow.md`
+- Command：`.cursor/commands/n8n-workflow.md`
+- 协作文档：`docs/n8n-mcp-and-claude-code.md`、`docs/CLAUDE-CURSOR-COLLABORATION.md`

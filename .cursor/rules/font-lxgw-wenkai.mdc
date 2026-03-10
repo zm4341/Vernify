@@ -1,0 +1,25 @@
+---
+description: Vernify 项目字体规范 - 统一使用霞鹜文楷
+alwaysApply: true
+globs:
+---
+
+# 字体规范
+
+**Vernify 项目统一使用 [LXGW WenKai / 霞鹜文楷](https://github.com/lxgw/LxgwWenKai)。**
+
+## 规则
+
+- **正文字体**：`LXGW WenKai`（霞鹜文楷）
+- **等宽/代码字体**：`LXGW WenKai Mono`
+
+## 实现要求
+
+1. **CSS/Tailwind**：使用 `font-sans` 或 `font-family: 'LXGW WenKai', sans-serif`
+2. **内联样式**：`fontFamily: "'LXGW WenKai', sans-serif"`
+3. **禁止**：不要使用 Inter、system-ui 等作为主字体；LXGW WenKai 已通过 Tailwind 和 globals.css 配置为默认
+
+## 配置位置
+
+- `Web/app/globals.css`：CDN 引入 + body 默认
+- `Web/tailwind.config.ts`：sans / mono 扩展

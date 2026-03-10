@@ -1,0 +1,46 @@
+---
+description: LaTeX → 数据库 工作流规范
+globs: Web/backend/app/services/latex_parser/**/*.py, Web/backend/app/api/v1/latex.py, Web/app/admin/latex-sync/**/*
+alwaysApply: false
+---
+
+# LaTeX → 数据库
+
+## 架构约定
+
+- **主后端**：Next.js；**扩展服务**：FastAPI（`Web/backend/`）提供 LaTeX 同步 API；Next BFF 代理至 FastAPI，Caddy 不访问 FastAPI。
+- **解析逻辑**：位于 `Web/backend/app/services/latex_parser/`，Docker 与本地统一使用 backend 内解析模块，不依赖根目录 compiler。
+
+## 目标
+
+从用户选择或上传的 LaTeX 文件解析题目，写入 Supabase，不依赖静态文件编译。LaTeX 来源：Admin 页面 showDirectoryPicker 选择目录，或 scan-from-files 上传。
+
+## 核心路径
+
+| 组件 | 路径 |
+|------|------|
+| 解析器 | `Web/backend/app/services/latex_parser/parser.py` |
+| FastAPI 路由 | `Web/backend/app/api/v1/latex.py` |
+| Admin 界面 | `Web/app/admin/latex-sync/page.tsx`（流程：选择文件夹→显示路径→手动扫描→展示结果→同步到 DB） |
+
+## LaTeX 格式约定
+
+- **选择题**：`\begin{tasks}...\end{tasks}`，`\task` 题干/选项，`\task!` 表示正确选项
+- **填空题**：`\begin{enumerate}...\item ...\underline{\hspace{...}}...\score{4}...\end{enumerate}`
+- **分数**：`\score{4}` 或 `\score{6}`
+
+## API
+
+- `GET /api/v1/latex/scan?content_root=...`：扫描 content 根路径，返回章节和题目预览（**必填** content_root；Docker 请用 scan-from-files）
+- `POST /api/v1/latex/scan-from-files`：从前端上传的 .tex/.py 文件内容扫描（Docker 与本地均可用）
+- `POST /api/v1/latex/sync`：从 content_root 重新解析并写入 DB（**必填** content_root；Docker 请用 sync-from-scan）
+- `POST /api/v1/latex/sync-from-scan`：使用已扫描数据同步到 DB（不重新解析）
+
+**Docker 环境**：scan-from-files 与 sync-from-scan 可用；scan/sync 需 content_root，路径需在容器内可访问。
+
+## 数据库字段
+
+- `questions.type`：`choice` | `fill_blank` | `multi_choice`
+- `questions.content`：`{ stem, options, image }`
+- `questions.answer`：`{ correct, explanation }`
+- `questions.points`：分数

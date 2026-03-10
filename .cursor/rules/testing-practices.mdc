@@ -1,0 +1,73 @@
+---
+description: 测试实践规范——单元/集成/E2E 分层、命令、覆盖策略、测试编写约定。进行测试相关任务时参考。
+alwaysApply: false
+---
+
+# 测试实践规范
+
+进行测试编写、运行、补充或调试时遵循本规范。与 spec-driven-tdd 流程配合使用。
+
+## 测试分层
+
+| 层级 | 范围 | 工具 | 位置/命令 |
+|------|------|------|-----------|
+| **单元测试** | 单个函数、组件、类 | Vitest / Jest（前端）、pytest（后端） | `Web/**/*.test.{ts,tsx}`、`Web/backend/tests/` |
+| **集成测试** | API 端点、数据库、服务间调用 | pytest + TestClient（后端）、Vitest（前端 API mock） | `Web/backend/tests/integration/` |
+| **E2E 测试** | 完整用户流程、页面交互 | Chrome DevTools MCP / Playwright | 委托 **browser-tester** |
+
+## 运行命令
+
+```bash
+# 扩展服务（FastAPI）
+cd Web/backend && poetry run pytest
+cd Web/backend && poetry run pytest --cov=app
+cd Web/backend && poetry run pytest -v -k "test_health"
+
+# 前端（若已配置 Vitest）
+cd Web && npm test
+cd Web && npm run test:coverage
+```
+
+## 测试编写约定
+
+### 单元测试
+
+- **命名**：`describe('模块/组件', () => {...})` 或 `def test_行为描述():`
+- **结构**：Arrange → Act → Assert
+- **隔离**：外部依赖用 mock，不依赖真实 API/DB
+- **可重复**：无随机、无时间依赖、无副作用
+
+### 集成测试
+
+- **命名**：`test_接口_场景_预期` 或 `test_端点_方法_预期状态码`
+- **范围**：单个 API 或一组相关接口
+- **数据库**：可用测试库或 in-memory；清理测试数据
+
+### E2E
+
+- **必须自动使用 Chrome DevTools MCP**：涉及前端效果、页面交互、E2E 验证时，不得仅凭代码或单元测试推断，必须**自动**调用 Chrome DevTools MCP（或委托 **browser-tester**）在真实浏览器中验证。
+- **专用浏览器协议（必守）**：不直接 navigate 到 URL；先开启专用浏览器 → 等用户导航到目标页面并确认 → 再测试；代码修改后验证须先请用户关闭浏览器，再重新开启并等用户确认。详见 `.cursor/rules/browser-debug.mdc`。
+- **必须关注 Docker 状态与日志**：Vernify 前后端均在 Docker 中运行。做前端/E2E 验证前**必须先**检查 `cd Web && docker compose ps` 和 `docker logs Vernify-frontend`（及 Vernify-supabase-auth 等容器），确认无 `next: not found`、连接拒绝等错误；不得仅凭浏览器或单元测试下结论。访问地址：`http://127.0.0.1:38080/`。
+- 关键路径：登录、核心业务流程、错误页
+- **Playwright**：若需编写可重复、可 CI 的 E2E 脚本，可选用；日常验证以 Chrome DevTools MCP 为准。
+
+## 覆盖策略
+
+- **核心业务逻辑**：必须单元或集成覆盖
+- **API 路由**：至少集成测试覆盖 happy path 和主要错误码
+- **UI 组件**：关键交互可配合 browser-tester 人工验证
+
+## 与 Subagent 的配合
+
+| 场景 | 委托对象 | 说明 |
+|------|----------|------|
+| 编写/补充单元或集成测试 | **test-writer** | |
+| 运行 TDD 任务列表 | **tdd-executor** | |
+| 验证 API 请求响应 | **api-tester** | |
+| 验证页面、E2E 流程 | **browser-tester** | **必须**：自动使用 Chrome DevTools MCP，不得跳过 |
+
+## 参考
+
+- spec-driven-tdd 规则：Red-Green-Refactor、Evidence over claims
+- tdd-plan-and-implement 技能：任务拆解与两阶段验收
+- **systematic-debugging** 技能：测试失败或 bug 时，先根因调查再提出修复，禁止先猜后补

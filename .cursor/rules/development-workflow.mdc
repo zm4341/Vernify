@@ -1,0 +1,109 @@
+---
+description: 开发工作流规范——基于 everything-claude-code 最佳实践，适配 Vernify 项目。覆盖编码标准、质量门控、Agent 编排策略。
+globs:
+alwaysApply: true
+---
+
+# 开发工作流规范
+
+> 参考：[AGENTS.md](../../AGENTS.md)（平台无关主文档）、[everything-claude-code](https://github.com/affaan-m/everything-claude-code)
+
+## 编码标准
+
+### 不可变性（CRITICAL）
+
+```typescript
+// ✅ 正确
+const updated = { ...obj, key: value }
+setState(prev => ({ ...prev, field: val }))
+
+// ❌ 禁止
+obj.key = value
+setCount(count + 1)  // stale reference
+```
+
+### 文件规模
+
+- 函数 < 50 行
+- 文件 < 800 行（典型 200-400 行）
+- 超出时拆分为更小的单元
+
+### 命名
+
+- 变量/函数：camelCase（JS/TS）、snake_case（Python）
+- 组件：PascalCase
+- 常量：UPPER_SNAKE_CASE
+- 文件：kebab-case（页面/组件）、camelCase（工具函数）
+
+## Agent 主动编排策略
+
+以下场景**主动委托**，不等用户提示：
+
+| 触发场景 | 委托 SubAgent |
+| ---------- | -------------- |
+| 复杂新功能（3+ 文件） | `/orchestrate feature`（7 阶段）→ code-explorer × 2-3 → code-architect × 2-3 |
+| 完成代码变更后 | 3 × code-reviewer 并行（置信度 ≥ 80 才报告） |
+| 认证/输入/API 端点 | security-reviewer |
+| Bug 修复/新特性 | tdd-executor（先测试） |
+| 架构决策 | architect（输出 ADR） |
+| 数据库变更 | database-tester |
+
+## 质量门控
+
+交付前必须通过（使用 `/verify` 命令）：
+
+1. `cd Web && npm run build` — 零 TS 错误
+2. `cd Web && npm run lint` — 零 lint 错误
+3. `cd Web/backend && poetry run pytest -v`
+4. 无 `console.log`、`print(` 调试语句
+5. Git 状态确认
+
+## TDD 流程
+
+```
+RED  → 写失败测试（不写实现）
+GREEN → 最小实现让测试通过
+REFACTOR → 质量提升，测试仍通过
+```
+
+覆盖率：普通代码 ≥ 80%，认证/安全/核心计算 = 100%
+
+## 模型路由
+
+| 模型 | 适用 |
+|------|------|
+| haiku | 注释、格式化、简单重命名 |
+| sonnet | 实现、调试、测试（默认）|
+| opus | 架构决策、深度 review、安全审计 |
+
+## 上下文管理
+
+- 上下文超 70% 时用 `/checkpoint` 存档
+- 长任务完成主要阶段后写入 Graphiti
+- 委托 SubAgent 保持主上下文干净
+
+## 安全优先
+
+- 涉及用户输入/认证/API 时主动调用 security-reviewer
+- secrets 只存 `.env`，禁止硬编码
+- Supabase RLS 每张表必须配置
+- Token 存 httpOnly cookie，禁止 localStorage
+
+---
+
+## 可执行清单（日常对照）
+
+| 时机 | 动作 | 说明 |
+|------|------|------|
+| **交付前** | `/verify` 或 `/verify full` | 必须通过 6 步质量门控；Build 失败即停 |
+| **提 PR 前** | `/verify pre-pr` | 完整门控 + security-reviewer 扫描 |
+| **复杂新功能（3+ 文件）** | 按下面两行二选一 | 均需用户确认后再实现 |
+| → **/orchestrate feature** | 超大规模 / 跨模块 / 需求模糊 / 需多视角探索与多方案选型 | 7 阶段；详见 `docs/orchestrate-workflow.md` |
+| → **/plan** | 需求清晰、单模块或轻量、快速「方案→确认→实现」| 委托 planner 出方案 |
+| **代码变更完成后** | 主动委托 code-reviewer | 不等用户要求 |
+| **Bug/新特性** | 先写失败测试再实现（tdd-executor）| RED → GREEN → REFACTOR |
+| **上下文 > 70%** | `/checkpoint` 存档 | 长任务分阶段 checkpoint |
+| **任务结束（有变更）** | 写 Graphiti + 更新 docs/ | 委托 post-task-reviewer 或按 post-task-workflow |
+| **架构/安全相关** | 委托 architect / security-reviewer | 架构出 ADR；安全 CRITICAL 立即告警 |
+
+参考：`AGENTS.md`、`docs/orchestrate-workflow.md`、`.cursor/commands/verify.md`、`.cursor/commands/plan.md`、`.cursor/commands/orchestrate.md`、`post-task-workflow.mdc`。

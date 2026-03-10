@@ -1,0 +1,37 @@
+---
+description: LLM/LiteLLM 配置变更后必须由专门 SubAgent 记录
+globs: []
+alwaysApply: false
+---
+
+# LLM / LiteLLM 配置变更记录规范
+
+当发生 **LLM、LiteLLM、批改服务、模型列表**等配置变更时，**llm-config** 子代理完成代码/配置修改后，**必须**委托记录流程，不得遗漏。
+
+## 适用场景
+
+- 主模型或回退模型变更（如 `LLM_MODEL`、`LLM_FALLBACK_MODELS`）
+- 环境变量调整（`GEMINI_API_KEY`、`OPENROUTER_API_KEY` 等）
+- 批改服务逻辑变更（`grade()`、工厂、适配器）
+- 模型列表或 OpenRouter 配置变更
+- RAG 相关配置（`EMBEDDING_MODEL`、`RERANKER_MODEL`）
+
+## 变更后必做（llm-config 执行）
+
+llm-config 子代理完成上述任一变更后，**必须**按序委托：
+
+1. **project-updater** — 更新 `.cursor/MIGRATION.md`，记录本次 LLM 配置变更（模型列表、环境变量等）
+2. **docs-updater** — 若 `docs/architecture/TECH-STACK-ANALYSIS.md` 或相关文档含模型说明，委托更新
+3. **graphiti-memory** — 用 `add_memory` 记录模型列表、OpenRouter 配置等变更摘要
+
+## 记录范围
+
+| 项目         | 负责            | 内容                                                         |
+| ------------ | --------------- | ------------------------------------------------------------ |
+| MIGRATION.md | project-updater | 本次 LLM 配置变更、影响范围、涉及文件                        |
+| 相关 docs    | docs-updater    | TECH-STACK-ANALYSIS 等含模型说明的文档                       |
+| Graphiti     | graphiti-memory | 模型列表、OpenRouter 配置等变更摘要（按文档整体重构记忆）   |
+
+## 与 project-maintenance 的关系
+
+本规则为 project-maintenance「需要更新的场景」中「LLM / LiteLLM / 模型列表变更」的执行细则；完成记录后视为满足 project-maintenance 的更新要求。

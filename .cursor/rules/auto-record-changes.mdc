@@ -1,0 +1,36 @@
+---
+description: SubAgent 完成变更后必须自动查询与记录。主 Agent 收到汇报的第一动作为委托 post-task-reviewer，不得跳过。
+alwaysApply: true
+---
+
+# 修改完成后自动查询与记录
+
+**任何 SubAgent（page-maker、frontend-reviewer、code-navigator、docs-updater、project-updater 等）完成代码/UI/配置变更后**，主 Agent 收到汇报的**第一动作**必须为：委托 **post-task-reviewer**（或 docs-updater + project-updater + graphiti-memory）进行**查询与记录**。
+
+## 核心要求
+
+- **不得跳过**：主 Agent 收到 SubAgent 完成汇报后，不得等用户提醒，必须立即委托记录
+- **不得遗漏**：无论变更大小，有实际变更即有记录
+- **第一动作**：委托 post-task-reviewer 或对应 SubAgent 做查询与记录，在主 Agent 向用户反馈前完成
+
+## 记录范围
+
+- **MIGRATION.md**：重大变更（技术栈、架构、目录结构、约定变更等）
+- **Graphiti**：用 `add_memory` 记录变更摘要（本 MCP 无 add_episode）；按 `graphiti-memory.mdc` 约定，先修正错误记忆再写入
+- **docs/**：若涉及架构、业务、迁移，委托 **docs-updater** 更新 `docs/` 等
+- **.cursor/ 配置**：若涉及 Rules、SubAgents、Skills、Commands，委托 **project-updater** 更新
+
+## 适用 SubAgent
+
+- page-maker、frontend-reviewer、code-navigator
+- docs-updater、project-updater
+- tdd-executor、browser-tester、api-tester
+- latex-parser、llm-config、docker-expert 等
+
+以上 SubAgent 完成**代码/UI/配置**变更后，主 Agent 收到汇报即触发本规则。
+
+## 参考
+
+- `post-task-workflow.mdc` — 完整收尾流程
+- `task-priority-workflow.mdc` — 任务前后必做
+- `graphiti-memory.mdc` — Graphiti 查询与记录约定

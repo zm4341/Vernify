@@ -1,0 +1,68 @@
+---
+description: 项目文档更新规范。架构/代码变更后，必须委托 docs-updater 更新 docs/ 等，主 Agent 不得自行修改。
+alwaysApply: false
+---
+
+# 项目文档更新规范
+
+**主 Agent 不得自行修改项目文档。** 所有 `docs/` 的更新必须委托 **docs-updater** SubAgent 执行。
+
+## 文档存放原则
+
+- **所有文档类文件均放在根目录 docs/ 下**；docs/ 为唯一文档根
+- 不在根目录、Web/ 或其他位置散落创建文档；新增文档统一放入 docs/ 相应子目录
+- 创建文件前必查 docs/、Graphiti、必要时 Serena，详见 `docs/DOCUMENT-CONVENTIONS.md`
+
+## 何时委托 docs-updater
+
+- **Serena / code-navigator 分析后**：根据分析报告修正架构文档
+- **架构变更**：请求流、模块边界、路由、环境变量
+- **代码重构后**：目录结构、API、模块职责
+- **功能/迁移变更**：内容来源、服务增减
+- **技术栈升级**：版本、约定、breaking changes
+
+## 文档范围（docs-updater 负责）
+
+| 路径 | 说明 |
+|------|------|
+| `docs/` | DOCUMENT-CONVENTIONS.md（不创建重复文档、新建须非常严谨、创建前必做、修改即替换） |
+| `docs/architecture/` | ARCHITECTURE.md（唯一架构文档）、TECH-STACK-ANALYSIS.md（技术栈+数据流）、PRD.md、MODULARIZATION.md |
+| `docs/migration/` | 迁移记录（如 CONTENT-SOURCE-MIGRATION.md） |
+| `docs/latex/`、`docs/auth/`、`docs/plans/` 等 | 按变更范围 |
+| `.cursor/MIGRATION.md` | 文档/架构类重大变更记录 |
+
+## 统一做法（修改即替换、单一数据源、不创建重复文档）
+
+- **默认只替换**：更新文档时，用新内容替换原文，不保留多个版本（如 v1、v2、_old）。
+- **不创建重复文档**：主要宗旨；**确需新建时**须非常严谨——完成创建前必查、必要性分析、记录新建原因（见 `docs/DOCUMENT-CONVENTIONS.md` §3）。
+- **单一数据源**：规范文件（含 graphiti-memory 的 8 个规范文件）为单一数据源；文档更新后需保证 Graphiti 可据此整体重构记忆。
+
+## 委托方式
+
+- 主 Agent：委托 **docs-updater** SubAgent，传入变更来源（Serena 报告、架构决策、diff 等）
+- 快速触发：`/update-docs` 或 `/update-docs [变更描述]`
+- post-task-reviewer：流程中「更新文档」步骤可委托 docs-updater
+
+## 收尾约定（根目录 .cursorrules 同步）
+
+若本次文档变更影响根目录 **.cursorrules** 的摘要（如：文档根、架构入口、运行方式、禁止项、规则入口、Graphiti/SubAgent 等关键约定），**须同步更新根目录 `.cursorrules`**，保持与 docs/ 一致；由执行文档更新的 SubAgent 或主 Agent 在本次流程内完成。
+
+## 与 project-updater 的分工
+
+| SubAgent | 负责 |
+|----------|------|
+| **docs-updater** | docs/、架构/迁移/业务文档 |
+| **project-updater** | .cursor/rules/、agents/、skills/、commands/、README、配置约定 |
+| **根目录 .cursorrules** | docs 变更且摘要受影响时由 **docs-updater** 同步；仅 .cursor/rules 等配置变更而 docs 未变时由 **project-updater** 同步 |
+
+## 原则
+
+- 以代码和 Serena 分析为准，文档与实现一致
+- 架构核心描述集中在 docs/architecture/ARCHITECTURE.md（唯一架构文档）
+- 遵循 refactor-convention：简化、主干、不堆叠冗余
+
+## 参考
+
+- SubAgent：`docs-updater`
+- Skill：`docs-updater`
+- Command：`/update-docs`

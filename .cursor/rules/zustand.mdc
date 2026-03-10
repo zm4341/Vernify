@@ -1,0 +1,34 @@
+---
+description: Zustand 状态管理使用规范
+globs: Web/**/*.{ts,tsx}
+---
+
+# Zustand 状态管理
+
+项目使用 [Zustand](https://github.com/pmndrs/zustand) 管理全局状态，配合 React Query 做服务端数据缓存。
+
+## Store 位置
+
+- `lib/stores/auth.ts` - 认证状态（user, profile）
+- `lib/stores/auth-sync.tsx` - Supabase Auth 与 Zustand 同步
+- 新 store 放在 `lib/stores/` 下，并在 `lib/stores/index.ts` 导出
+
+## 使用方式
+
+```ts
+import { useAuthStore } from '@/lib/stores';
+
+// 在组件中订阅（仅订阅用到的字段，减少重渲染）
+const user = useAuthStore((s) => s.user);
+const clearAuth = useAuthStore((s) => s.clearAuth);
+
+// 在事件处理器或非 React 中
+useAuthStore.getState().setUser(newUser);
+useAuthStore.getState().clearAuth();
+```
+
+## 约定
+
+- 用 selector 订阅：`useAuthStore((s) => s.user)` 而非 `useAuthStore()`，避免多余重渲染
+- 在 actions 中更新状态，不直接 `setState` 外部
+- 新 store 优先考虑 `persist` middleware 做持久化（如需要）

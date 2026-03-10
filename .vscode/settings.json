@@ -1,0 +1,74 @@
+{
+    // Markdown 文件默认用 Preview 视图打开
+    "workbench.editorAssociations": {
+        "*.md": "vscode.markdown.preview.editor",
+        "*.mdx": "vscode.markdown.preview.editor"
+    },
+    // 1. 核心路径修正：PDF和中间文件统一放入源码同级的 build 文件夹
+    "latex-workshop.latex.outDir": "%DIR%/build",
+    "latex-workshop.latex.autoBuild.run": "never",
+    "latex-workshop.view.pdf.viewer": "tab",
+    "latex-workshop.formatting.latex": "tex-fmt",
+    // 关键：手动覆盖默认参数，强制指定 tabsize 为 4
+    "latex-workshop.formatting.tex-fmt.args": [
+        "--tabsize",
+        "4"
+    ],
+    "latex-workshop.latex.tools": [
+        {
+            "name": "latexmk",
+            "command": "latexmk",
+            "args": [
+                "-xelatex",
+                "-shell-escape",
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-outdir=%OUTDIR%", // 使用内置变量自动对齐 outDir
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "xelatex",
+            "command": "xelatex",
+            "args": [
+                "-shell-escape",
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-output-directory=%OUTDIR%",
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "bibtex",
+            "command": "bibtex",
+            "args": [
+                "%OUTDIR%/%DOCFILE%" // 关键修正：让 BibTeX 去 build 文件夹找 .aux 文件
+            ]
+        }
+    ],
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "latexmk (常用)",
+            "tools": [
+                "latexmk"
+            ]
+        },
+        {
+            "name": "xe->bib->xe->xe (备用)",
+            "tools": [
+                "xelatex",
+                "bibtex",
+                "xelatex",
+                "xelatex"
+            ]
+        }
+    ],
+    // 自动清理：编译成功后自动删除 build 文件夹里的无用中间文件（保留PDF）
+    "latex-workshop.latex.autoClean.run": "onBuilt",
+    "latex-workshop.latex.clean.fileTypes": [
+        "*.aux", "*.bbl", "*.blg", "*.idx", "*.ind", "*.lof", "*.lot", "*.out", "*.toc", "*.acn", "*.acr", "*.alg", "*.glg", "*.glo", "*.gls", "*.ist", "*.fls", "*.log", "*.fdb_latexmk", "*.snm", "*.nav", "*.xdv"
+    ],
+    "svg.preview.background": "custom"
+}

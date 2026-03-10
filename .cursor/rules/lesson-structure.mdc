@@ -1,0 +1,33 @@
+# Vernify 课时结构 (圆的初步认识)
+
+## 架构约定
+
+- **主后端**：Next.js（前端 + BFF）；**扩展服务**：FastAPI 仅为 Next 提供 AI/LaTeX 等能力。详见 `project-structure.mdc`。
+
+## 五个课时及类型
+
+| slug | 中文名称 | 类型说明 |
+|------|----------|----------|
+| 00_Cover | 注意事项 | 阅读材料，非做题；包含考试信息、考察重点、考生须知 |
+| 01_MultipleChoice | 选择题 | 选择题型，共 5 题 20 分 |
+| 02_FillInBlank | 填空题 | 填空题型，共 6 题 24 分 |
+| 03_Operations_and_Analysis | 操作与分析 | 作图题 + 分析推理；考察作图规范与逆向思维，共 2 题 20 分 |
+| 04_Exploration_and_Application | 综合探究与应用 | 综合题；图形探究与解决问题，共 3 题 36 分 |
+
+## 约定
+
+- 主页显示用中文名称
+- 00_Cover 的 duration 用「阅读」
+- `Web/backend/app/services/latex_parser/` 解析的章节元数据需与上述一致
+- sync 仅同步课程/课时记录；title/description/duration 来自 LaTeX 元数据。课时正文来自 `lessons.content_source`（DB）
+
+## 内容渲染（MDX）
+
+- 课时正文用 **MDX (next-mdx-remote)** 渲染，支持 Markdown + JSX
+- 可用动画组件：`<FadeIn>`、`<LetterByLetter>`、`<SlideUp>`
+- 测验块：`<QuizBlock id="quiz_0" />` 或 ` ```quiz\nquiz_0\n``` `
+
+## 首页布局
+
+- **注意事项**：放在 Hero 区按钮行（与「开始学习」「查看大纲」同排），样式与「查看大纲」一致
+- **课程卡片网格**：不展示 00_Cover，只展示 01～04

@@ -1,0 +1,110 @@
+---
+description: 主 Agent 编排原则——只负责与用户讨论问题、反馈结果；所有具体操作必须委托 SubAgent，保持主上下文清洁。
+alwaysApply: true
+---
+
+# 主 Agent 编排原则（委托优先）
+
+**主 Agent 只负责与用户讨论问题、反馈问题；所有具体事情均由独立 SubAgent 完成，不得污染主 Agent 与用户之间的上下文。** 在满足规则的前提下，优先**一次选对路径、避免无谓的重复搜索或多次试错**，以控制上下文与 Token 消耗。
+
+**委托边界**：委托给 SubAgent 的任务应是**边界清晰、可独立完成**的。若仅需一句话答案且无后续操作，可先检索 Graphiti 后直接回答，不必为极简问答再委托多类 SubAgent。SubAgent 向主 Agent 汇报时优先返回**结论与必要摘要**，避免把整文件、大段代码或冗长日志贴回主会话，以控制主会话上下文长度。
+
+**所有 SubAgent 均须遵循**：不创建重复文档（primary goal）；新建时须非常严谨（完成创建前必查、必要性分析、记录新建原因）。见 `docs/DOCUMENT-CONVENTIONS.md`、`project-maintenance.mdc`。
+
+## 任务开始时：优先执行（Graphiti 检索为第一步，必做，不得跳过）
+
+**主 Agent 在做任何事之前，必须先执行 Graphiti 检索，不得跳过。** 此为第一步，无可例外。
+
+每次任务/对话**开始时**，主 Agent 必须**按序**执行（与 `task-priority-workflow.mdc`、`graphiti-memory.mdc` 一致）：
+
+1. **Graphiti 检索（必做，不得跳过）**：**必须**委托 **graphiti-memory** SubAgent 执行（主 Agent 不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`）；检索与当前任务相关的偏好、程序、事实并遵循检索结果执行。
+2. **必要时 Serena**：若涉及代码分析、查找、重构，委托 **code-navigator**（使用 Serena）。
+3. **必要时读项目文档**：若上下文不足，先读 `docs/`（如 docs/architecture/ARCHITECTURE.md、docs/architecture/PRD.md）、`.cursor/` 下相关规则或 README。
+
+## 创建文件前必做
+
+**创建任何新文件前**（含文档、Rule、Skill、SubAgent、Command 等），必须先：1) 查询 docs/ 是否已有同类 2) 查询 Graphiti 3) 涉及代码时查询 Serena 4) 分析必要性、路径、是否重复 5) 确需新建时记录新建原因。详见 `docs/DOCUMENT-CONVENTIONS.md`、`project-maintenance.mdc`。
+
+## Rules、Skills、SubAgents、Commands 约定
+
+- **创建前必查**：新建 Rule/Skill/SubAgent/Command 前必须先查询是否已有类似或可复用配置；若有则优先复用或扩展
+- **原子化**：Skills 与 Commands 尽量原子化——每 Skill 完成一个小任务或流程、每 Command 触发一个动作；可组合使用
+- **配合**：Skills、Commands 与 Rules、SubAgents 应可组合，避免重复造轮子
+
+## 主 Agent 的职责（仅此）
+
+- 理解用户需求、澄清模糊点
+- 拆解任务、识别所需 SubAgent
+- **委托** SubAgent 执行具体操作
+- 汇总 SubAgent 返回的摘要、向用户**反馈**
+- **交付前**：确保构建通过、已知错误已修复；不交付带构建失败或已知 bug 的结果（见 `task-priority-workflow.mdc` 交付前验证）。
+- **有了结论后**：必须委托 **post-task-reviewer** 或 **docs-updater**（文档）/ **project-updater**（配置）更新文档与配置，并委托 **graphiti-memory** 记录；自动化执行，不等待用户提醒。记忆维护时需**按文档整体重构记忆**：根据所有 Vernify 文档理解整体重构（删除/修正错误、使全部记忆与文档一致），不只追加（见 `task-priority-workflow.mdc`、`graphiti-memory.mdc`）
+- **收到 SubAgent 完成汇报后**：**第一动作**为委托 post-task-reviewer 做查询与记录，不得跳过。见 `auto-record-changes.mdc`。
+
+## 主 Agent 禁止直接执行
+
+**执行任何 StrReplace / Write / EditNotebook 前，必须自检：是否应委托 SubAgent？若是，则不得自行执行。**
+
+**主 Agent 不得修改任何代码、配置或文档。** 所有写操作（StrReplace、Write、EditNotebook 等）一律委托 SubAgent，主 Agent 仅负责理解需求、委托任务、汇总反馈。
+
+- **不得**以「任务简单」「多处小改」「跨多类文件」为由自行执行；应拆解后分别委托对应 SubAgent。
+- **涉及 `Web/app/`、`Web/components/` 的 StrReplace/Write**（含改链接、删 DOM、改样式、调布局等）：主 Agent **必须**委托 **page-maker**，不得自行执行；无论改动大小，一律委托，无例外。
+- 若任务同时涉及查找、修改、文档、记忆等，主 Agent 必须拆成多步，**每步委托对应 SubAgent**，不得自行完成任一步。
+
+**不得**直接做以下任何操作，一律委托 SubAgent：
+
+- **查找**、**分析**、搜索代码或文档 → 委托 **code-navigator**
+- **读文件、改代码、写文档** → 委托对应 SubAgent（page-maker、code-navigator、docs-updater、project-updater 等），**主 Agent 不使用 StrReplace/Write**
+- 执行命令、运行测试 → 委托 tdd-executor / api-tester / browser-tester 等
+- 记忆检索与写入 → 委托 **graphiti-memory**
+
+主 Agent 不直接使用 SemanticSearch、Grep、Read、StrReplace、Write、Shell 等工具；收到「查找」「分析」「修改」「实现」「清理」「更新」「指定」「全盘查询并修改」等请求时，**立即委托对应 SubAgent**。
+
+## 任务类型 → SubAgent 分工
+
+| 任务类型 | 委托 SubAgent | 说明 |
+|----------|---------------|------|
+| 代码搜索、架构理解、重构 | **code-navigator** | SemanticSearch / Serena 分析、符号查找、引用追踪；重构含义见 `refactor-convention.mdc` |
+| 前端代码修改、审查 | **frontend-reviewer** | Next.js/React 实现与审查、性能与类型 |
+| 页面/UI 制作 | **graphiti-memory** → **page-maker** | **必须**：先委托 graphiti-memory 检索与页面设计相关的偏好、程序、事实；必要时读取 `docs/architecture/ARCHITECTURE.md`、`docs/architecture/PRD.md` 等；再将完整上下文传给 page-maker 执行设计系统 + 代码实现 + 验证。含改链接、删 DOM、改样式、调布局；主 Agent 不得直接改 `Web/app/`、`Web/components/` 下任何代码 |
+| TDD 实现 | **tdd-executor** | 写测试 → 实现 → 跑测试并汇报 |
+| 测试用例编写 | **test-writer** | 编写/补充单元测试、集成测试 |
+| 文档更新 | **docs-updater** | docs/、ARCHITECTURE.md、架构/迁移文档；以 Serena 分析、代码为准 |
+| 配置维护 | **project-updater** | .cursor/ Rules、SubAgents、Skills、Commands、README |
+| 任务收尾流程 | **post-task-reviewer** | Graphiti 检查 → Serena 分析 → 重构 → 文档 → 知识同步 |
+| 记忆检索与写入 | **graphiti-memory** | Graphiti MCP 节点/事实检索、记忆写入；含按文档整体重构记忆（先删改再写入） |
+| 浏览器/E2E 验证 | **browser-tester** | Chrome DevTools MCP 验证页面、控制台、网络 |
+| API 接口测试 | **api-tester** | FastAPI 扩展服务接口测试 |
+| Docker 配置与调试 | **docker-expert** | 容器、网络、编排 |
+| LaTeX 内容编译 | **latex-expert** | LaTeX 源文件、MDX、课程内容 |
+| LaTeX 解析与同步 | **latex-parser** | 解析 LaTeX、同步到 DB（Admin 选择目录或 scan-from-files）|
+| LLM 配置调试 | **llm-config** | 批改服务、模型切换、LiteLLM、AI SDK |
+| 数据库查询/验证 | **database-tester** | Supabase MCP 查询、验证、数据修复 |
+| n8n 工作流创建/管理/验证 | **n8n-workflow** | 通过 n8n-mcp 创建、更新、校验、执行 workflow；见 n8n-mcp.mdc |
+| 代码审查（规格+质量） | **code-reviewer** | 对照计划与编码标准审查 |
+| 复杂功能 7 阶段编排 | **code-explorer**（Phase 2）、**code-architect**（Phase 4）| `/orchestrate feature` 专用；由 orchestrate 命令在 Discovery→Exploration→Clarification→Architecture→Implementation→Review→Summary 各阶段委托 |
+
+## 例外（极少）
+
+- **无可用 SubAgent**：若任务无对应 SubAgent，主 Agent 可自行执行，但完成后必须建议创建或扩展 SubAgent
+
+## 页面设计请求的特别流程
+
+当用户请求**新建、重构或修改页面**（落地页、课程页、Admin、改版等）时，主 Agent **必须**按以下顺序执行，不得跳过：
+
+1. **graphiti-memory 检索**：委托 **graphiti-memory** SubAgent 检索与页面设计相关的偏好、程序、事实（主 Agent 不得让用户手动执行）
+2. **必要时读项目文档**：若上下文不足，读取 `docs/architecture/ARCHITECTURE.md`、`docs/architecture/PRD.md`、设计规范等
+3. **委托 page-maker**：将检索结果与文档摘要、用户需求作为完整上下文传入 page-maker SubAgent；主 Agent 不得直接改页面代码
+
+详见 `page-maker.mdc`、`page-maker/SKILL.md`。
+
+## 与现有规则的配合
+
+- **spec-driven-tdd**：分析、Serena、计划、执行各步均委托对应 SubAgent
+- **post-task-workflow**：流程内各步（Graphiti、Serena、重构、文档、知识同步）委托 post-task-reviewer 或相关 SubAgent
+- **page-maker**：页面制作**必须**委托 page-maker SubAgent，且设计前必做 Graphiti 检索 + 读文档（见本规则「页面设计请求的特别流程」）
+
+## 参考
+
+- SubAgent 清单：`.cursor/agents/README.md`
+- 技能：`agent-orchestration`

@@ -1,0 +1,211 @@
+---
+description: Vernify 全栈项目结构规范
+alwaysApply: true
+---
+
+# Vernify 项目结构
+
+## ⚠️ 任务开始必做：先 Graphiti 检索（不得跳过）
+
+主 Agent 在做任何事之前，**必须先**委托 **graphiti-memory** SubAgent 执行检索（主 Agent 不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`），**不得跳过**。详见 `task-priority-workflow.mdc`、`agent-orchestration.mdc`、`graphiti-memory.mdc`。
+
+---
+
+教育科技全栈项目：Next.js 16 为前端 + 主后端，FastAPI 仅为能力扩展；Caddy 不访问 FastAPI，Next 内部直接与 FastAPI 通信。LaTeX 解析与 Manim 之后再说；根目录已移除 content/、Test/、MCPs/、compiler/。**Web/lib/content/** 为课时内容领域（lessons-db.ts 等），从 DB 读取，与已删除的根目录 content/ 不同。
+
+## 技术栈
+
+### 前端
+- **Next.js**: 16.1.6 (Turbopack)
+- **React**: 19.0.0
+- **TypeScript**: 5.7.2
+- **样式**: Tailwind CSS 3.4 + DaisyUI
+- **字体**: [LXGW WenKai / 霞鹜文楷](https://github.com/lxgw/LxgwWenKai)（正文字体与等宽字体均使用）
+- **状态管理**: Zustand + React Query 5.62
+- **表单验证**: Zod 4.3.6
+- **动画**: Framer Motion + GSAP
+- **数学公式**: MathLive
+- **内容**: MDX (next-mdx-remote + DB；课时正文来自 `lessons.content_source`，课程描述用 `lib/mdx.tsx` 的 MdxText；支持 Markdown + JSX 与 FadeIn/LetterByLetter/SlideUp 等动画。**新页面必须按 mdx-evaluation.mdc 评估是否需 MDX 渲染**)
+
+### 主后端
+- **Next.js**：app/api/*（BFF）、SSR；处理所有 /api/v1/* 请求；需 AI/LaTeX 时内部调用 FastAPI。
+- **数据库**: PostgreSQL 15 + Supabase + PostgREST
+
+### 扩展服务（FastAPI，Web/backend/）
+> 非主后端；仅为 Next.js 提供 AI、LaTeX 等能力扩展。
+- **FastAPI**: Python 3.11
+- **LLM**: LiteLLM (支持 Gemini、OpenAI、Anthropic 等)
+- **任务队列**: Celery + Redis
+- **依赖管理**: Poetry
+
+### 部署
+- **容器**: Docker Compose
+- **反向代理**: Caddy 2.7
+- **端口**: HTTP 38080, HTTPS 38443
+- **⚠️ 运行方式**：**Vernify 所有服务均在 Docker 中运行**，不混用本机 `npm run dev` 或 `uvicorn`；前后端、扩展服务、Supabase 等统一在容器内运行
+
+## 目录结构
+
+```
+a.圆的初步认识/
+│
+├── CLAUDE.md                   # Claude Code 项目入口，与 Cursor 协作共享 Graphiti 与 docs/
+├── .claude/                    # Claude Code 配置（mcp.json、agents/ 等）
+├── Web/                        # ⚠️ 全栈应用（前端 + 后端 + 部署配置）
+│   │
+│   ├── app/                   # Next.js App Router 页面
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── admin/             # Admin 后台（AdminLayoutClient 管理 collapsed、侧边栏默认收起，AdminSidebar 可收缩 72px/224px、导航标签「LaTeX 同步」）
+│   │   │   ├── latex-sync/    # LaTeX 同步（LaTeX/Manim 解析与同步）
+│   │   │   ├── AdminSidebar.tsx
+│   │   │   └── AdminLayoutClient.tsx
+│   │   └── lessons/[slug]/page.tsx
+│   │
+│   ├── components/            # React 组件
+│   │   ├── Quiz*.tsx         # 答题组件
+│   │   ├── GeoGebra*.tsx     # 作图组件
+│   │   └── ...
+│   │
+│   ├── lib/                   # 前端工具库
+│   │   ├── api/client.ts     # API 客户端
+│   │   ├── hooks/useApi.ts   # React Query Hooks
+│   │   ├── stores/           # Zustand 状态
+│   │   │   ├── auth.ts       # 认证状态
+│   │   │   └── auth-sync.tsx # Supabase ↔ Zustand 同步
+│   │   ├── schemas/index.ts  # Zod 验证 schemas
+│   │   └── providers.tsx     # 全局 Providers
+│   │
+│   ├── public/                # 静态资源（Web/content 已删除，课时正文仅来自 DB）
+│   │   ├── assets/           # SVG 图片
+│   │   ├── videos/           # 视频
+│   │   └── lib/geogebra/     # GeoGebra 本地托管
+│   │
+│   ├── backend/               # FastAPI 扩展服务（非主后端）
+│   │   ├── app/
+│   │   │   ├── main.py       # 入口
+│   │   │   ├── api/v1/       # main 仅挂载 ai、latex；courses/lessons/quiz/grading/users 存在但未挂载（遗留）
+│   │   │   ├── core/         # 配置、依赖、安全
+│   │   │   ├── db/           # 数据库连接
+│   │   │   ├── models/       # Pydantic 模型
+│   │   │   ├── services/     # 业务逻辑
+│   │   │   │   └── llm/      # LLM 适配器
+│   │   │   ├── workers/      # Celery 任务
+│   │   │   └── extensions/   # 插件系统
+│   │   ├── Dockerfile
+│   │   ├── Dockerfile.dev
+│   │   └── pyproject.toml
+│   │
+│   ├── supabase/              # 数据库配置
+│   │   ├── migrations/       # SQL 迁移
+│   │   ├── config.toml
+│   │   └── kong.yml
+│   │
+│   ├── caddy/                 # 反向代理
+│   │   ├── Caddyfile
+│   │   ├── Caddyfile.dev
+│   │   └── Dockerfile
+│   │
+│   ├── docker-compose.yml     # 生产环境 Docker
+│   ├── docker-compose.override.yml  # 覆盖：backend/worker 使用 content_anon:/app/content 匿名卷，避免宿主机根目录创建 Content
+│   ├── docker-compose.dev.yml # 开发环境 Docker
+│   ├── .env.example           # 环境变量模板
+│   ├── package.json
+│   ├── tailwind.config.ts
+│   └── tsconfig.json
+│
+├── docs/                       # 项目文档（唯一文档根）——所有文档类内容均在 docs/ 下
+│   ├── DOCUMENT-CONVENTIONS.md # 文档规范（不创建重复文档、新建须非常严谨、创建前必做）
+│   ├── design-system/          # 设计系统（ui-ux-pro-max 输出；MASTER.md + pages/）
+│   ├── latex/                  # LaTeX 解析与同步（spec-latex-to-db、latex-to-db-flow）
+│   ├── architecture/           # 架构、PRD、模块化、技术栈分析（ARCHITECTURE.md、PRD、MODULARIZATION、TECH-STACK-ANALYSIS）；docs/architecture/ARCHITECTURE.md 为唯一架构文档
+│   ├── migration/              # 迁移记录（CONTENT-SOURCE-MIGRATION）
+│   ├── auth/                   # 认证配置（auth-setup）
+│   ├── plans/                  # 设计文档（brainstorm 输出）
+│   ├── debug/                  # 调试用页面与工具（如 check-background.html）
+│   └── samples/                # API 响应示例等样例文件（如 courses_response.json）
+├── .cursor/
+│   ├── commands/               # 斜杠命令
+│   │   └── use-claude-code.md  # 通过 Graphiti 将任务委托给 Claude Code
+│   └── rules/                 # Cursor 规则
+└── .agents/skills/             # 共享技能库（含 ai-sdk、graphiti-memory、claude-code-bridge）；Claude Code 通过 .agent/skills/ 符号链接访问，Cursor 通过 .cursor/skills/ 符号链接访问 claude-code-bridge
+```
+
+## 核心规则
+
+### 1. Web/ 是应用根目录
+- 所有前端代码（`app/`、`components/`、`lib/`）在 `Web/`
+- Next.js 主后端（BFF）也在 `Web/`（app/api/*）；FastAPI 扩展服务代码在 `Web/backend/`
+- 所有部署配置（Docker、Supabase、Caddy）在 `Web/`
+- `package.json` 和 `node_modules/` 在 `Web/`
+
+### 2. docs/ 为唯一文档根
+- **所有文档类文件均放在根目录 `docs/` 下**，不在根目录、Web/ 或其他位置创建文档；docs/ 为唯一文档根
+- 新增文档统一放入 docs/ 相应子目录
+- **创建文件前必做**：不创建重复文档（主要宗旨）；新建须非常严谨（查询 docs/、Graphiti、必要时 Serena → 分析必要性 → 记录新建原因）。详见 `docs/DOCUMENT-CONVENTIONS.md`、`docs-updater.mdc`、`project-maintenance.mdc`
+
+### 3. Claude Code × Cursor 协作
+- Claude Code 与 Cursor 通过 **Graphiti**（group_id: vernify）和 **docs/** 协作；分工与委托见 `.agents/skills/claude-code-bridge/SKILL.md`、根目录 `CLAUDE.md`。
+
+### 4. 根目录无 compiler/content/Test/MCPs/scripts
+- 已删除；LaTeX 解析与 Manim 之后再说。根目录与 Web 内均无 scripts 目录。
+- **MCP 路径约定**：MCP 统一在 `~/AI/MCPs`（即 `/Users/minzhang/AI/MCPs`）；Deepwiki 部署在 `~/AI/MCPs/deepwiki-open`。Vernify 根目录无 MCPs 文件夹。Deepwiki 部署脚本与说明已移至 `~/AI/MCPs/deepwiki-open`（deploy.sh、DEPLOY-NOTES.md）。
+- 课程内容来自 DB（`lessons.content_source`）；无 JSON 文件回退；`Web/content` 已删除（历史遗留 JSON，应用不读取）。
+- 根目录 `content/`、`Content/` 若被工具自动创建，`.gitignore` 仅让 Git 不跟踪该目录，不阻止其被创建。为避免 Docker 绑定挂载在宿主机根目录创建 Content，backend/worker 使用 **content_anon** 匿名卷挂载 `/app/content`（见 `docker-compose.override.yml` 与 `docker-compose.dev.yml`）。应用完全不依赖 content 目录。
+
+## 命令速查
+
+```bash
+# Docker 开发环境（前端 + 后端均在容器内运行）
+cd Web && docker compose -f docker-compose.yml -f docker-compose.dev.yml -p vernify up -d
+
+# Docker 生产环境
+cd Web && docker compose -p vernify up -d
+
+# 访问应用
+# 开发/生产入口：http://127.0.0.1:38080/
+```
+
+## 重要约定
+
+### 记忆与 Graphiti
+- **记忆统一使用 Graphiti**，不再使用 `.cursor/memories/` 下的 .md 文件；记忆仅来自规范文件与 Graphiti MCP。
+
+### API 兼容性
+- **Zod v4**: 使用 `z.record(z.string(), z.any())` 而不是 `z.record(z.any())`
+- **Zod v4**: ZodError 使用 `.error.issues` 而不是 `.error.errors`
+- **Next.js 16**: params 和 searchParams 必须 await（async）
+- **React 19**: ImgHTMLAttributes 的 src 可能是 string | Blob
+
+### Docker 配置
+- **Vernify 所有服务均在 Docker 中运行**，统一通过 Caddy 入口：`http://127.0.0.1:38080`；禁止在宿主机运行 `npm run dev` 或 `uvicorn` 与 Docker 混用
+- 开发环境：`docker-compose.yml` + `docker-compose.dev.yml`；生产环境可选 `docker-compose.override.yml`（为 backend/worker 挂载 content_anon 匿名卷）
+- **content_anon**：backend/worker 挂载 `content_anon:/app/content`，避免绑定 `../content` 时 Docker 在宿主机根目录创建 Content；应用不依赖 content 目录，课时正文来自 DB
+- PostgREST (supabase-rest) 提供 REST API
+- 无 Ollama 服务（仅使用云端 LLM）
+
+## 前端调试
+
+- 网页验证与问题排查**必须**使用 Chrome DevTools MCP，见 `.cursor/rules/browser-debug.mdc`。
+- 浏览器测试子 Agent：`.cursor/agents/browser-tester.md`。
+- 本地 Docker 调试地址：`http://127.0.0.1:38080/`。
+
+## 框架与库文档查询（Context7）
+
+- **必须优先使用 Context7**：涉及 Next.js、React、Supabase、FastAPI、Zod、Tailwind、**Graphiti**、**Neo4j** 等框架/库的 **API 用法、版本差异、最佳实践** 时，先通过 **Context7 MCP** 查询最新文档，再写代码。
+- **用法**：先 `resolve-library-id`（库名）→ 再 `query-docs`（具体问题）。详见 `.cursor/tools-strategy.md`。
+- 避免仅凭训练数据写 API，版本易过时；Context7 提供与当前版本一致的文档与示例。
+- **Vercel AI SDK**：涉及 streamText、useChat、Agent、流式、STT/TTS 等时，使用 **ai-sdk** Skill（Marketplace 安装，`.agents/skills/ai-sdk`），见 `.cursor/skills/README.md`。
+
+## 禁止操作
+
+- ❌ 不要在宿主机运行 `npm run dev` 或 `uvicorn` 与 Docker 混用（Vernify 所有服务均在 Docker 中运行）
+- ❌ 不要在项目根目录创建前端文件（`app/`、`components/`）
+- ❌ 不要在项目根目录放置 `package.json` 或 `docker-compose.yml`
+- ❌ 不要在项目根目录运行 `npm` 或 `docker compose`
+- ❌ 不要修改已应用的数据库迁移文件
+- ❌ 不要添加 Ollama 相关配置（已移除）
+
+## 参考
+
+- Claude Code × Cursor 协作：Graphiti（group_id: vernify）与 docs/ 共享；分工与委托见 `CLAUDE.md`、`.agents/skills/claude-code-bridge/SKILL.md`。
