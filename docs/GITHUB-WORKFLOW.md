@@ -8,9 +8,9 @@
 - **PR = 成果验收单/代码差异**：给 AI 的存档点——改了什么、为什么这么改。便于后续复盘与降低 Context 成本。
 - **重要**：Issue/PR 不仅是给人看的，更是喂给 AI 的高质量上下文；写烂了 AI 会猜错需求或无法复盘。
 
-## 任务开始前：检索 → 文档（按需）→ Issue（按需）→ 切分支（按需）
+## 任务开始前：检索 → GitNexus（代码类）→ 文档（按需）→ Issue（按需）→ 切分支（按需）
 
-- 先执行 **Graphiti 检索**；**仅当上下文仍不足时**读项目文档，避免重复（见 `task-priority-workflow.mdc`）。
+- 先执行 **Graphiti 检索**（委托 graphiti-memory）；再**委托 gitnexus SubAgent** 执行 GitNexus 索引检查（代码类任务）：detect_changes，stale 时先 `npx gitnexus analyze`，再 query 理解代码结构；**仅当上下文仍不足时**读项目文档，避免重复（见 `task-priority-workflow.mdc`）。
 - **仅当有实际开发、修复或功能任务时**创建或关联 issue（纯问答、纯检索类任务不需要）。
 - Issue 应包含：问题/需求描述、验收条件。可委托 **github** SubAgent 创建。
 - **创建 Issue 后立即切出对应分支**，命名与 Issue 类型对应：
@@ -35,10 +35,10 @@
 
 - **说明**：在 Cursor 中可 @Issue #123，AI 能抓取上述结构；可说「按 Issue #123 的 Task 1 执行」以精准驱动。
 
-## 解决问题后：commit/push → 记录 → 文档（按需）→ PR → 等待确认 → merge/删分支
+## 解决问题后：detect_changes → commit/push → 记录 → 文档（按需）→ PR → 等待确认 → merge/删分支
 
 - 完成代码/配置变更并**通过验证**后，应：
-  1. **commit/push** 使变更落地（在功能分支上）；
+  1. **委托 gitnexus SubAgent 执行 detect_changes()** 验证只修改了预期符号；再 **commit/push** 使变更落地（在功能分支上）；
   2. 记录 Graphiti、**有架构/配置变更时**更新文档与配置；
   3. 在 GitHub 创建 **Pull Request**，关联对应 issue（`Fixes #N`）；
   4. **等待用户确认**后，再执行 merge 与删除分支——AI 不得自行 merge 或删分支。

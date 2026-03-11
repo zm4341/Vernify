@@ -21,7 +21,31 @@
       "Bash(git -C /Users/minzhang/Developer/Vernify log --all -p)",
       "Bash(git -C /Users/minzhang/Developer/Vernify log --all --full-history --stat -- \"Web/.env\" \"*.env\")",
       "Bash(git -C /Users/minzhang/Developer/Vernify show 7b8e835 --stat)",
-      "Bash(git -C /Users/minzhang/Developer/Vernify show f9cee7e --stat)"
+      "Bash(git -C /Users/minzhang/Developer/Vernify show f9cee7e --stat)",
+      "Bash(git rm:*)",
+      "Bash(source:*)",
+      "Read(//Users/minzhang/AI/MCPs/GitNexus/**)",
+      "Read(//Users/minzhang/.local/share/fnm/**)",
+      "Read(//Users/minzhang/**)",
+      "Bash(SESSION_ID=\"8bece8271f2845d5b940d709c3162110\")",
+      "Bash(__NEW_LINE_01ba9af9f4ea2bde__ curl -s -X POST http://localhost:19283/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: $SESSION_ID\" -d '{:*)",
+      "Bash(__NEW_LINE_50568b8493f17e4e__ curl -s -X POST http://localhost:19283/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: $SESSION_ID\" -d '{:*)",
+      "Bash(__NEW_LINE_23b05993b5e35e77__ curl -s -X POST http://localhost:19283/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: $SESSION_ID\" -d '{:*)",
+      "mcp__gitnexus__list_repos",
+      "mcp__gitnexus__detect_changes",
+      "mcp__gitnexus__query",
+      "mcp__gitnexus__cypher",
+      "mcp__gitnexus__context",
+      "Bash(npm view:*)",
+      "Bash(npm install:*)",
+      "Bash(npx gitnexus analyze:*)",
+      "Bash(./sync-mcp-from-env.sh:*)",
+      "Skill(commit-commands:commit)",
+      "Skill(commit-commands:commit:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/minzhang/AI/MCPs/GitNexus/gitnexus-web",
+      "/Users/minzhang"
     ]
   },
   "enabledPlugins": {

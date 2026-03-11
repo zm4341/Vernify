@@ -95,8 +95,9 @@ REFACTOR → 质量提升，测试仍通过
 
 | 时机 | 动作 | 说明 |
 |------|------|------|
-| **任务开始前** | 查 Graphiti → 查文档（上下文不足时）→ 撰写 issue（仅开发/修复/功能任务）→ 切分支（feat/fix/docs/refactor）→ 调用 SubAgent | 先委托 graphiti-memory 检索；仅当上下文仍不足时读 docs/；纯问答/纯检索不建 issue；建 issue 后立即切对应分支，不得在 main 上直接提交代码；见 `task-priority-workflow.mdc` |
-| **任务结束后** | commit/push → 记录 Graphiti → 更新文档（有架构/配置变更时）→ 撰写 PR | 有变更时先 commit/push，再 graphiti-memory 写入，再按需更新文档与配置，最后 PR；见 `task-priority-workflow.mdc` |
+| **任务开始前** | 查 Graphiti → 委托 gitnexus（代码类：detect_changes + query）→ 查文档（上下文不足时）→ 撰写 issue（仅开发/修复/功能任务）→ 切分支（feat/fix/docs/refactor）→ 调用 SubAgent | 先委托 graphiti-memory 检索；代码类任务再委托 gitnexus（detect_changes，stale 先 analyze，再 query）；仅当上下文仍不足时读 docs/；纯问答/纯检索不建 issue；建 issue 后立即切对应分支；见 `task-priority-workflow.mdc` |
+| **改代码前** | 委托 gitnexus 执行 impact(symbolName) | 修改任何函数/类/方法前必做；HIGH/CRITICAL 先告知用户 |
+| **任务结束后** | 委托 gitnexus 执行 detect_changes（验证）→ commit/push → 记录 Graphiti → 更新文档（有架构/配置变更时）→ 撰写 PR | commit 前先委托 gitnexus 做 detect_changes 确认只改了预期符号；再 commit/push，再 graphiti-memory 写入，按需更新文档，最后 PR；见 `task-priority-workflow.mdc` |
 | **交付前** | `/verify` 或 `/verify full` | 必须通过 6 步质量门控；Build 失败即停 |
 | **提 PR 前** | `/verify pre-pr` | 完整门控 + security-reviewer 扫描 |
 | **复杂新功能（3+ 文件）** | 按下面两行二选一 | 均需用户确认后再实现 |
