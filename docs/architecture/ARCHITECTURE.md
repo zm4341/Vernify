@@ -16,7 +16,7 @@ docker exec -i Vernify-db psql -U postgres -d vernify < Web/supabase/seed.sql
 
 若课程已存在会报主键冲突，可忽略或先清空相关表再执行。
 
-**开发环境 HMR（热更新）与页面重载**：经 Caddy（38080）访问时，即使使用 `next dev --webpack`，Next.js 16 对 `/_next/webpack-hmr` 仍可能返回 404，浏览器会不断重试该 WebSocket，属已知现象。**建议**：需要热更新时直连 **http://localhost:3000**（开发配置已暴露 frontend 3000 端口），HMR 可正常使用；需完整栈（Auth、API、Supabase）时访问 **http://localhost:38080**，此时可忽略控制台中的 HMR 重试请求。修改 frontend 配置后需执行 `docker compose up -d --force-recreate frontend` 使生效。
+**开发环境 HMR（热更新）**：Next.js 16 引入 `isolatedDevBuild`（默认启用），使 `next dev` 的输出写到 `.next/dev/`。在 Docker 中这等于写到 `/app/.next/dev/`（volume 挂载），而 Turbopack 同时在监视 `/app/**`，导致写操作被误判为源码变更 → 触发无限重编译循环 → HMR WebSocket ID 持续变化 → 浏览器不断重连 → 视觉重置。修复方式：在 `next.config.mjs` 中设置 `experimental.isolatedDevBuild: false`，使 dev 输出写到 `NEXT_DIST_DIR=/tmp/.next/`（不在被监视的 `/app/` 内），同时 Caddy 已配置 WebSocket 透传（`flush_interval -1`），HMR 可通过 `http://localhost:38080` 正常使用。修改 frontend 配置后需执行 `docker compose up -d --force-recreate frontend` 使生效。
 
 ---
 

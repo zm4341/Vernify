@@ -35,10 +35,9 @@ services:
       - AI_SERVICE_URL=http://backend:8000
       # Supabase 服务端
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-    # 开发时暴露 3000：直连 http://localhost:3000 可用的 HMR；经 Caddy 的 38080 下 HMR 可能 404 并不断重试，可忽略或改用 3000 开发
-    ports: !override
-      - "3000:3000"
-    command: npm run dev:webpack
+    # 不对外暴露端口，通过 Caddy 访问（HMR WebSocket 经 Caddy 正常工作）
+    ports: !override []
+    command: npm run dev
 
   # AI 服务 (FastAPI) - 专注于 AI 批改
   backend:
