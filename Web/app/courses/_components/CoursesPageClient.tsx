@@ -93,23 +93,12 @@ export function CoursesPageClient({ courses, descriptionNodes = {} }: CoursesPag
   const router = useRouter();
   const { user, profile, isLoading: authLoading } = useAuthStore();
 
-  const { grouped, uncategorized, firstSubjectWithCourses } = useMemo(() => {
-    const { grouped, uncategorized } = groupCoursesBySubjectAndGrade(courses);
-    let firstKey: string | null = null;
-    for (const { key } of SUBJECTS) {
-      const gradeMap = grouped.get(key) ?? new Map<string, Course[]>();
-      const hasAny = Array.from(gradeMap.values()).some((arr) => arr.length > 0);
-      if (hasAny) {
-        firstKey = key;
-        break;
-      }
-    }
-    return { grouped, uncategorized, firstSubjectWithCourses: firstKey };
-  }, [courses]);
-
-  const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(() =>
-    firstSubjectWithCourses != null ? new Set([firstSubjectWithCourses]) : new Set()
+  const { grouped, uncategorized } = useMemo(
+    () => groupCoursesBySubjectAndGrade(courses),
+    [courses]
   );
+
+  const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(() => new Set());
 
   const toggleSubject = (subject: string) => {
     setExpandedSubjects((prev) => {
