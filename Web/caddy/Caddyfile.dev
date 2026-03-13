@@ -104,19 +104,23 @@
 			header_up X-Real-IP {remote_host}
 			header_up X-Forwarded-For {remote_host}
 			header_up X-Forwarded-Proto {scheme}
-			
+
 			# WebSocket 支持 (Next.js HMR)
 			header_up Upgrade {>Upgrade}
 			header_up Connection {>Connection}
+
+			# 立即刷新响应，避免缓冲干扰 WebSocket/SSE 连接
+			flush_interval -1
 		}
 	}
-	
+
 	# 日志
 	log {
 		output stdout
 		format console
 	}
-	
-	# 压缩
-	encode gzip zstd
+
+	# 压缩（排除 WebSocket 连接，避免干扰 HMR 握手）
+	@notWebSocket not header Connection *pgrade*
+	encode @notWebSocket gzip zstd
 }
