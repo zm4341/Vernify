@@ -26,9 +26,19 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          // 仅当 cookie 实际变化时才写回响应，避免每次请求都 Set-Cookie 导致 Next.js 触发整页重载
+          // 注意：不能比较数组长度，因为 current 包含浏览器所有 cookie，cookiesToSet 只含认证 cookie
+          const same = cookiesToSet.every(
+            (c) => request.cookies.get(c.name)?.value === c.value
+          );
+          if (same) return;
+
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
+          // /admin 路径不写回 Set-Cookie，避免 Next.js 整页重载
+          if (request.nextUrl.pathname.startsWith('/admin')) return;
+
           supabaseResponse = NextResponse.next({
             request,
           });
