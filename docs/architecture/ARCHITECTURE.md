@@ -16,7 +16,14 @@ docker exec -i Vernify-db psql -U postgres -d vernify < Web/supabase/seed.sql
 
 若课程已存在会报主键冲突，可忽略或先清空相关表再执行。
 
-**开发环境 HMR（热更新）**：Next.js 16 引入 `isolatedDevBuild`（默认启用），使 `next dev` 的输出写到 `.next/dev/`。在 Docker 中这等于写到 `/app/.next/dev/`（volume 挂载），而 Turbopack 同时在监视 `/app/**`，导致写操作被误判为源码变更 → 触发无限重编译循环 → HMR WebSocket ID 持续变化 → 浏览器不断重连 → 视觉重置。修复方式：在 `next.config.mjs` 中设置 `experimental.isolatedDevBuild: false`，使 dev 输出写到 `NEXT_DIST_DIR=/tmp/.next/`（不在被监视的 `/app/` 内），同时 Caddy 已配置 WebSocket 透传（`flush_interval -1`），HMR 可通过 `http://localhost:38080` 正常使用。修改 frontend 配置后需执行 `docker compose up -d --force-recreate frontend` 使生效。
+**开发环境 HMR（热更新）**：Turbopack 在 Docker 中通过 Caddy 反向代理（`:38080`）正常工作，有以下关键配置：
+
+1. **distDir**：使用默认 `.next`，由 Docker 命名 volume `frontend_next:/app/.next` 挂载，覆盖宿主机 bind mount 的 `.next` 子目录。Turbopack 16+ 强制要求 distDir 在 projectPath 内（不能用 `../` 路径），且自动将 distDir 排除在文件监视之外，故不会产生无限重编译循环。
+2. **isolatedDevBuild: false**：防止 Next.js 16 将 dev 输出写到 `distDir/dev/` 子目录。
+3. **Caddy WebSocket 代理**：`reverse_proxy` 块中不能写 `header_up Upgrade {>Upgrade}`，否则 Caddy 会将 `{>Upgrade}` 作为字面字符串发给上游，导致 WebSocket 握手失败。Caddy 原生支持 WebSocket upgrade，无需手动转发这两个 header。`flush_interval -1` 确保响应立即刷新。
+4. **allowedDevOrigins**：配置 `['localhost:38080', '127.0.0.1:38080']`，使 Next.js dev server 接受来自 Caddy 的请求。
+
+修改 frontend 配置后需执行 `docker compose up -d --force-recreate frontend` 使生效。
 
 ---
 
