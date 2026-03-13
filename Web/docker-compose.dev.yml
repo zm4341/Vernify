@@ -20,10 +20,11 @@ services:
       # 源码挂载；不覆盖 node_modules，使用镜像内 npm install 的结果
       - .:/app
       - frontend_node_modules:/app/node_modules
-      # .next 改用 NEXT_DIST_DIR=/tmp/.next，不挂载 volume，避免 Permission denied
+      # distDir 使用命名 volume 挂载到 /app/.next，覆盖宿主机绑定挂载
+      # Turbopack 自动将 distDir 排除在文件监视之外，故不产生无限重编译循环
+      # Turbopack 要求 distDir 在 projectPath 内，不能用 ../next-dist 这类路径
       - frontend_next:/app/.next
     environment:
-      - NEXT_DIST_DIR=/tmp/.next
       - NODE_ENV=development
       # 统一入口（浏览器访问）
       - NEXT_PUBLIC_APP_URL=http://localhost:38080
