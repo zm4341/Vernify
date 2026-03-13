@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Circle,
@@ -57,10 +57,11 @@ function initEmptyGrouped() {
   return map;
 }
 
-/** 将课程按 学科 > 年级 分组 */
+/** 将课程按 学科 > 年级 分组；grade 为空或不在 GRADES 的课程归入「其他课程」 */
 function groupCoursesBySubjectAndGrade(courses: Course[]) {
   const map = initEmptyGrouped();
   const uncategorized: Course[] = [];
+  const validGradeKeys = new Set<string>(GRADES.map((g) => g.key));
 
   for (const course of courses) {
     const meta = (course.metadata || {}) as { subject?: string; grade?: string };
@@ -71,10 +72,13 @@ function groupCoursesBySubjectAndGrade(courses: Course[]) {
       uncategorized.push(course);
       continue;
     }
+    if (!grade || !validGradeKeys.has(grade)) {
+      uncategorized.push(course);
+      continue;
+    }
     const gradeMap = map.get(subject)!;
-    const gradeKey = grade || "default";
-    if (!gradeMap.has(gradeKey)) gradeMap.set(gradeKey, []);
-    gradeMap.get(gradeKey)!.push(course);
+    if (!gradeMap.has(grade)) gradeMap.set(grade, []);
+    gradeMap.get(grade)!.push(course);
   }
 
   return { grouped: map, uncategorized };
@@ -88,7 +92,24 @@ export interface CoursesPageClientProps {
 export function CoursesPageClient({ courses, descriptionNodes = {} }: CoursesPageClientProps) {
   const router = useRouter();
   const { user, profile, isLoading: authLoading } = useAuthStore();
-  const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(new Set());
+
+  const { grouped, uncategorized, firstSubjectWithCourses } = useMemo(() => {
+    const { grouped, uncategorized } = groupCoursesBySubjectAndGrade(courses);
+    let firstKey: string | null = null;
+    for (const { key } of SUBJECTS) {
+      const gradeMap = grouped.get(key) ?? new Map<string, Course[]>();
+      const hasAny = Array.from(gradeMap.values()).some((arr) => arr.length > 0);
+      if (hasAny) {
+        firstKey = key;
+        break;
+      }
+    }
+    return { grouped, uncategorized, firstSubjectWithCourses: firstKey };
+  }, [courses]);
+
+  const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(() =>
+    firstSubjectWithCourses != null ? new Set([firstSubjectWithCourses]) : new Set()
+  );
 
   const toggleSubject = (subject: string) => {
     setExpandedSubjects((prev) => {
@@ -106,8 +127,6 @@ export function CoursesPageClient({ courses, descriptionNodes = {} }: CoursesPag
     router.push("/login");
     router.refresh();
   }
-
-  const { grouped, uncategorized } = groupCoursesBySubjectAndGrade(courses);
 
   return (
     <main

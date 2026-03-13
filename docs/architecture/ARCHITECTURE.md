@@ -8,6 +8,14 @@
 
 **Vernify 所有服务均在 Docker 中运行**，不混用本机 `npm run dev` 或 `uvicorn`。前后端、FastAPI 扩展服务、Supabase 等统一在容器内运行，经 Caddy 入口 `http://127.0.0.1:38080` 访问。
 
+开发环境若需课程列表出现示例课程（如「圆的初步认识」），需在数据库就绪后**手动执行** seed。Docker 仅将 `supabase/migrations` 挂载到 db 的 `docker-entrypoint-initdb.d`，**不会自动执行 seed**。在项目根目录执行（需先 `cd Web && docker compose -f docker-compose.yml -f docker-compose.dev.yml -p vernify up -d` 确保 db 已启动）：
+
+```bash
+docker exec -i Vernify-db psql -U postgres -d vernify < Web/supabase/seed.sql
+```
+
+若课程已存在会报主键冲突，可忽略或先清空相关表再执行。
+
 ---
 
 ## 1. 整体拓扑
@@ -121,4 +129,4 @@ Caddy (38080/38443) ─┬─► Next.js (前端 + BFF，主后端)
 - 模块化具体步骤与优先级见 **MODULARIZATION.md**（可按需创建）。
 - 课时内容渲染与存储变更见 **docs/migration/CONTENT-SOURCE-MIGRATION.md**。
 - 变更架构或路由时请同步更新此文档。
-- **开发与收尾流程**：任务开始（Graphiti 检索、必要时 Serena、读文档）、主 Agent 编排（委托 SubAgent）、任务后必做（更新文档与 Graphiti 记录）、交付前构建与错误修复等，见 `.cursor` 规则：`task-priority-workflow.mdc`、`agent-orchestration.mdc`、`post-task-workflow.mdc`。
+- **开发与收尾流程**：任务开始（Graphiti 检索必做 → GitNexus 代码类 → 读文档不足时 → issue+分支 开发/修复/功能类 → SubAgent）、改代码前 impact、任务结束（detect_changes → commit/push → Graphiti 记录 → 更新文档/配置 → PR），以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准；详见 `.cursor` 规则：`task-priority-workflow.mdc`、`agent-orchestration.mdc`、`post-task-workflow.mdc`。
