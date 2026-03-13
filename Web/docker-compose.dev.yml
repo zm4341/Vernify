@@ -37,7 +37,8 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     # 不对外暴露端口，通过 Caddy 访问
     ports: !override []
-    command: npm run dev
+    # 使用 webpack 开发模式（--no-turbo），使 /_next/webpack-hmr 可用，经 Caddy 代理后 HMR 正常、避免页面反复重载
+    command: npm run dev:webpack
 
   # AI 服务 (FastAPI) - 专注于 AI 批改
   backend:

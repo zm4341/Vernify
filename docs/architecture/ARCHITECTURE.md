@@ -16,6 +16,8 @@ docker exec -i Vernify-db psql -U postgres -d vernify < Web/supabase/seed.sql
 
 若课程已存在会报主键冲突，可忽略或先清空相关表再执行。
 
+**开发环境 HMR（热更新）与页面重载**：经 Caddy 访问时，Next.js 默认的 Turbopack 会对 `/_next/webpack-hmr` 返回 404，导致 HMR WebSocket 失败、客户端退化为整页刷新。因此 Docker 开发配置中 frontend 使用 `npm run dev:webpack`（即 `next dev --no-turbo`），使用 webpack 开发服务，使 `/_next/webpack-hmr` 可用，Caddy 已配置 WebSocket 透传，HMR 可正常连接。修改 frontend 启动方式后需执行 `docker compose up -d --force-recreate frontend` 使新 command 生效。
+
 ---
 
 ## 1. 整体拓扑
