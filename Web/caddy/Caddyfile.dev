@@ -69,15 +69,14 @@
 		}
 	}
 
-	# Realtime 服务 (WebSocket)
+	# Realtime 服务 (WebSocket) - Caddy 原生处理 WebSocket upgrade，无需手动转发 Upgrade/Connection
 	handle /realtime/* {
 		reverse_proxy supabase-kong:8000 {
 			header_up Host {host}
 			header_up X-Real-IP {remote_host}
 			header_up X-Forwarded-For {remote_host}
 			header_up X-Forwarded-Proto {scheme}
-			header_up Upgrade {>Upgrade}
-			header_up Connection {>Connection}
+			flush_interval -1
 		}
 	}
 	
@@ -104,19 +103,22 @@
 			header_up X-Real-IP {remote_host}
 			header_up X-Forwarded-For {remote_host}
 			header_up X-Forwarded-Proto {scheme}
-			
-			# WebSocket 支持 (Next.js HMR)
-			header_up Upgrade {>Upgrade}
-			header_up Connection {>Connection}
+
+			# Caddy 原生支持 WebSocket upgrade，无需 header_up Upgrade/Connection
+			# 手动设置会将 {>Upgrade} 作为字面量发送，导致 WebSocket 握手失败
+
+			# 立即刷新响应，确保 WebSocket/SSE 不被缓冲
+			flush_interval -1
 		}
 	}
-	
+
 	# 日志
 	log {
 		output stdout
 		format console
 	}
-	
-	# 压缩
-	encode gzip zstd
+
+	# 压缩（排除 WebSocket 连接，避免干扰 HMR 握手）
+	@notWebSocket not header Connection *pgrade*
+	encode @notWebSocket gzip zstd
 }

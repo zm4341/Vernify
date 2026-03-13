@@ -3,10 +3,12 @@
 # 需在容器启动时重新安装依赖，否则会报 sh: next: not found
 set -e
 
-# 修复 .next 目录权限：Next.js dev 在 .next/lock 创建锁文件，Docker volume 可能导致 Permission denied
-mkdir -p .next
-chmod -R 777 .next 2>/dev/null || true
-rm -f .next/lock 2>/dev/null || true
+# 修复 distDir 目录权限
+# distDir = /app/.next（命名 volume，覆盖宿主机绑定挂载中的 .next 目录）
+# Turbopack 要求 distDir 在 projectPath 内，故用默认 .next
+mkdir -p /app/.next
+chmod -R 777 /app/.next 2>/dev/null || true
+rm -f /app/.next/lock 2>/dev/null || true
 
 if [ ! -f node_modules/.package-lock.json ] 2>/dev/null || [ ! -x node_modules/.bin/next ] 2>/dev/null; then
   echo "Installing dependencies..."
