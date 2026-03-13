@@ -20,7 +20,7 @@ alwaysApply: false
 
 ## 前置：Context7 与 Graphiti MCP
 
-- **Context7 查询（若可用）**：使用 Graphiti MCP 前，先通过 **Context7** 查询 Graphiti MCP API 或 Neo4j 文档；若 Context7 无对应库，则参考官方文档（Graphiti https://help.getzep.com/graphiti/、Neo4j https://neo4j.com/docs/）。
+- **Context7 查询（若可用）**：使用 Graphiti MCP 前，先通过 **Context7** 查询 Graphiti MCP API 或 Neo4j 文档；若 Context7 无对应库，则参考官方文档（[Graphiti](https://help.getzep.com/graphiti/)、[Neo4j](https://neo4j.com/docs/)）。
 - **必选工具**：Graphiti MCP（见 `~/.cursor/mcp.json`，后端可为 Neo4j）；**Cursor 内服务器名**：`user-graphiti`；**URL 无尾斜杠**：`http://localhost:19283/mcp`
 - **用途**：存储与检索偏好（Preference）、程序（Procedure）、事实（Fact）、事件（Episode）
 - **写入 API**：本 MCP 仅暴露 **add_memory**，必填 **name** + **episode_body**（无 content/category）；可选 group_id、source。详见 `docs/GRAPHITI-MCP-REFERENCE.md`。
@@ -55,9 +55,9 @@ alwaysApply: false
 - **写入 Graphiti 的记忆必须且仅可来源于以下规范文件**，以保证记录与文档一致、避免错误或过时信息：
 
 | 文件 | 用途 |
-|------|------|
+| --- | --- |
 | `.cursor/rules/project-structure.mdc` | 项目结构、技术栈、目录、核心规则、Docker、命令 |
-| `docs/architecture/ARCHITECTURE.md` | 架构、服务拓扑、数据流、模块划分 |
+| `docs/architecture/ARCHITECTURE.md` | 架构、服务拓扑、数据流、模块划分（仅稳定结构；操作性细节/踩坑/决策原因写 Graphiti episode，不写此文件） |
 | `docs/architecture/TECH-STACK-ANALYSIS.md` | 技术栈与数据流（合并后），与 ARCHITECTURE 互补 |
 | `docs/architecture/PRD.md` | 产品需求文档 |
 | `docs/architecture/MODULARIZATION.md` | 模块化设计 |
@@ -101,7 +101,7 @@ alwaysApply: false
 - **主 Agent 硬性约定**：执行 Graphiti 检索或写入时**必须委托 graphiti-memory SubAgent**，不得自行调用 Graphiti MCP，**不得让用户手动执行** `/graphiti-memory` 或「你去跑一下命令」。
 
 | 场景 | 委托/触发 | 说明 |
-|------|-----------|------|
+| --- | --- | --- |
 | 记忆检索、写入、复杂图谱操作 | **graphiti-memory** 子代理 | 主 Agent 须委托；SubAgent 使用 Graphiti MCP 工具 |
 | 快速存一份本次任务摘要 | 委托 **graphiti-memory** | 主 Agent 不得让用户执行 `/graphiti-memory`；见 `commands/graphiti-memory.md` |
 | 任务完成后完整收尾流程 | **post-task-reviewer** 或 `/post-task-review` | Graphiti 检查 → Serena 分析 → 重构 → 文档 → 知识同步；见 `post-task-workflow.mdc` |
@@ -109,8 +109,8 @@ alwaysApply: false
 ## 参考
 
 - `refactor-convention.mdc` - 重构含义约定（适用于 Graphiti 图谱、文档、代码等）
-- **Graphiti MCP README**：https://github.com/getzep/graphiti/blob/main/mcp_server/README.md
-- **aivi.fyi Cursor Rules**：https://www.aivi.fyi/aiagents/introduce-Graphiti-MCP-Server#cursor-rules
-- Graphiti Cursor Rules（仓库内）：https://github.com/getzep/graphiti/blob/main/mcp_server/docs/cursor_rules.md
-- Graphiti 文档：https://help.getzep.com/graphiti/getting-started/mcp-server
+- **Graphiti MCP README**：[README](https://github.com/getzep/graphiti/blob/main/mcp_server/README.md)
+- **aivi.fyi Cursor Rules**：[介绍文章](https://www.aivi.fyi/aiagents/introduce-Graphiti-MCP-Server#cursor-rules)
+- Graphiti Cursor Rules（仓库内）：[cursor_rules.md](https://github.com/getzep/graphiti/blob/main/mcp_server/docs/cursor_rules.md)
+- Graphiti 文档：[入门指南](https://help.getzep.com/graphiti/getting-started/mcp-server)
 - **Vernify 使用约定**：`docs/GRAPHITI-USAGE.md`

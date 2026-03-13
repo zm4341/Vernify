@@ -21,12 +21,26 @@ alwaysApply: false
 - **功能/迁移变更**：内容来源、服务增减
 - **技术栈升级**：版本、约定、breaking changes
 
+## ARCHITECTURE.md 内容边界（必遵）
+
+**ARCHITECTURE.md 只写稳定的结构性内容**，不写操作性细节：
+
+| 写入 ARCHITECTURE.md ✅ | 写入 Graphiti ✅，不写 ARCHITECTURE.md ❌ |
+| ---------------------- | ---------------------------------------- |
+| 服务拓扑与端口映射 | 配置踩坑与修复过程 |
+| 模块边界与职责 | "为什么这样配置"的原因说明 |
+| 请求/数据流（箭头图） | 故障排查笔记 |
+| 环境变量名称与用途 | 历史决策演进记录 |
+| 部署方式概述 | 版本升级 breaking changes 细节 |
+
+操作性知识写入 Graphiti episode，ARCHITECTURE.md 引用 Graphiti 检索关键词即可（如：「详见 Graphiti "HMR distDir 修复"」）。
+
 ## 文档范围（docs-updater 负责）
 
 | 路径 | 说明 |
 |------|------|
 | `docs/` | DOCUMENT-CONVENTIONS.md（不创建重复文档、新建须非常严谨、创建前必做、修改即替换） |
-| `docs/architecture/` | ARCHITECTURE.md（唯一架构文档）、TECH-STACK-ANALYSIS.md（技术栈+数据流）、PRD.md、MODULARIZATION.md |
+| `docs/architecture/` | ARCHITECTURE.md（唯一架构文档，仅写稳定结构）、TECH-STACK-ANALYSIS.md（技术栈+数据流）、PRD.md、MODULARIZATION.md |
 | `docs/migration/` | 迁移记录（如 CONTENT-SOURCE-MIGRATION.md） |
 | `docs/latex/`、`docs/auth/`、`docs/plans/` 等 | 按变更范围 |
 | `.cursor/MIGRATION.md` | 文档/架构类重大变更记录 |
