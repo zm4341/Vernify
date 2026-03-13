@@ -4,6 +4,55 @@
 
 ---
 
+## 2026-03-13 - 首页与课程列表收尾（seed / UUID / 去选课）
+
+### 变更内容
+
+- **课程列表入口**：默认展开第一个有课程的学科，/courses 首屏即可见课程入口；seed 需手动执行，`docs/architecture/ARCHITECTURE.md` 已补充命令。
+- **课程 id 与 Zod UUID**：seed.sql 与 DB 已改为合法 UUID，修复 /courses 500。
+- **首页**：HomeClient 中间块改为「去选课」入口，已登录用户进首页不再看到「圆的初步认识」整块，选课统一走 /courses。
+
+### 涉及文件
+
+- `Web/components/HomeClient.tsx`、`Web/app/courses/_components/CoursesPageClient.tsx`、`Web/supabase/seed.sql`
+- `docs/architecture/ARCHITECTURE.md`（seed 与运行方式）
+
+### 影响
+
+- 首页仅保留「去选课」入口；课程列表与详情统一经 /courses 与 /courses/[id]。
+
+---
+
+## 2026-03-13 - 官方 GitHub MCP 与 github SubAgent 完整配置
+
+### 变更内容
+
+建立**官方 GitHub MCP**（.cursor/mcp.json 中已配置的 "github"：ghcr.io/github/github-mcp-server）的完整配置，主 Agent 委托 **github** SubAgent 执行 issue/PR 操作，优先使用 GitHub MCP 而非 gh CLI。用户已关闭 GitKraken MCP，仅使用官方 GitHub MCP。
+
+- **SubAgent**：新建 `.cursor/agents/github.md` — 使用官方 GitHub MCP 执行 issue/PR；委托时机（任务前 issue、任务后 PR）；工具声明（issue_write、create_pull_request、add_issue_comment、list_issues、list_pull_requests 等）；不自行 merge/删分支。
+- **Rule**：新建 `.cursor/rules/github-mcp.mdc` — 何时委托 github SubAgent、优先 GitHub MCP、与 task-priority-workflow 一致。
+- **Skill**：新建 `.cursor/skills/github-mcp/SKILL.md` — 何时使用、工具与参数要点、owner/repo。
+- **Command**：新建 `.cursor/commands/github.md` — `/github` 触发创建 issue/PR 或列出 issues 等，委托 github SubAgent。
+- **更新**：`agent-orchestration.mdc`、`task-priority-workflow.mdc`、`.cursor/agents/README.md` — GitHub 行改为明确委托 **github** SubAgent（GitHub MCP），主 Agent 不得自行调用 gh CLI。
+- **文档**：新建 `docs/GITHUB-MCP.md`；`docs/GITHUB-WORKFLOW.md` 增加「GitHub MCP 与 github SubAgent」并链到 GITHUB-MCP.md。
+- **根目录**：`.cursorrules` 补充「GitHub 操作委托 github SubAgent，见 .cursor/agents/github.md」；`project-maintenance.mdc` 配置文件清单增加 github-mcp.mdc。
+
+### 涉及文件
+
+- `.cursor/agents/github.md`（新建）
+- `.cursor/rules/github-mcp.mdc`（新建）
+- `.cursor/skills/github-mcp/SKILL.md`（新建）
+- `.cursor/commands/github.md`（新建）
+- `.cursor/rules/agent-orchestration.mdc`、`.cursor/rules/task-priority-workflow.mdc`、`.cursor/agents/README.md`、`.cursor/rules/project-maintenance.mdc`
+- `docs/GITHUB-MCP.md`（新建）、`docs/GITHUB-WORKFLOW.md`
+- `.cursorrules`、`.cursor/MIGRATION.md`（本条目）
+
+### 影响
+
+- 任务前创建/关联 issue、任务后创建 PR（Fixes #N）均由主 Agent 委托 **github** SubAgent 通过 GitHub MCP 执行；不再依赖 gh CLI。PR 创建后等用户确认，AI 不自行 merge 或删分支。
+
+---
+
 ## 2026-02-16 - n8n-mcp 社区版替换与 n8n-skills 集成
 
 ### 变更内容
