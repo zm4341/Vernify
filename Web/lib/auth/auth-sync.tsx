@@ -7,6 +7,9 @@ import { useAuthStore } from './store';
 /**
  * 将 Supabase Auth 状态同步到 Zustand auth store
  * 需在 Providers 内使用（浏览器环境）
+ *
+ * 说明：若通过 127.0.0.1 访问首页/登录/注册，会做一次重定向到 localhost（避免 Cookie 等差异），
+ * 会带来一次整页刷新；建议统一用 localhost 访问以减少刷新感。
  */
 export function AuthSync({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -55,7 +58,7 @@ export function AuthSync({ children }: { children: React.ReactNode }) {
 
     return () => {
       subscription.unsubscribe();
-      setLoading(true);
+      /* 不再在卸载时 setLoading(true)，避免导航或重挂载时出现短暂 loading 闪烁 */
     };
   }, []);
 

@@ -34,4 +34,4 @@ llm-config 子代理完成上述任一变更后，**必须**按序委托：
 
 ## 与 project-maintenance 的关系
 
-本规则为 project-maintenance「需要更新的场景」中「LLM / LiteLLM / 模型列表变更」的执行细则；完成记录后视为满足 project-maintenance 的更新要求。
+本规则为 project-maintenance「需要更新的场景」中「LLM / LiteLLM / 模型列表变更」的执行细则；完成记录后视为满足 project-maintenance 的更新要求。开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。

@@ -7,7 +7,7 @@
 - **主要宗旨**：**不创建重复文档**（primary goal: avoid duplicate documents）。优先修改现有文件，不保留多版本（如 v1、v2、_old、_new）。
 - **新建允许**：确有需要时可以创建新文档，但流程须**非常严谨**（very rigorous）：完成创建前必查、分析必要性、记录新建原因等（见第 3 节）。
 
-所有 SubAgent（含 docs-updater、project-updater、post-task-reviewer 等）均须遵循此原则。
+所有 SubAgent（含 docs-updater、project-updater、post-task-reviewer 等）均须遵循此原则。开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 1. 文档放置原则
 

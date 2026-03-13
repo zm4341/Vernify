@@ -41,7 +41,11 @@
       "Bash(npx gitnexus analyze:*)",
       "Bash(./sync-mcp-from-env.sh:*)",
       "Skill(commit-commands:commit)",
-      "Skill(commit-commands:commit:*)"
+      "Skill(commit-commands:commit:*)",
+      "mcp__gitnexus__impact",
+      "Bash(gh pr merge:*)",
+      "Bash(git pull:*)",
+      "Bash(git remote prune:*)"
     ],
     "additionalDirectories": [
       "/Users/minzhang/AI/MCPs/GitNexus/gitnexus-web",

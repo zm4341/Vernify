@@ -71,3 +71,4 @@ post-task 流程中「更新文档」步骤：若变更涉及 docs/ 或架构，
 - Rule：`docs-updater.mdc`
 - SubAgent：`docs-updater`
 - Command：`/update-docs`
+- 开发流程（任务结束更新文档时机）：`task-priority-workflow.mdc`、`docs/CLAUDE-CURSOR-COLLABORATION.md`

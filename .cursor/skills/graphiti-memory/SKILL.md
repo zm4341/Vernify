@@ -7,7 +7,7 @@ description: 使用 Graphiti MCP 进行长期记忆的存储与检索；Graphiti
 
 在 Vernify 项目中，使用 **Graphiti MCP** 构建 AI 的长期记忆（Neo4j 知识图谱）。Graphiti 既是**记忆系统**（偏好/程序/需求/事实/事件），也用于**记录做过的事**（任务摘要、变更、结论），供后续检索与一致执行。
 
-**⚠️ 硬性要求**：每次任务开始**必须**先用 Graphiti 检索，**不得跳过**；做事后必写入。主 Agent 在做任何事之前必须先执行 Graphiti 检索。
+**⚠️ 硬性要求**：每次任务开始**必须**先用 Graphiti 检索，**不得跳过**；做事后必写入。主 Agent 在做任何事之前必须先执行 Graphiti 检索。任务开始/结束完整步骤以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## group_id 约定（必遵）
 

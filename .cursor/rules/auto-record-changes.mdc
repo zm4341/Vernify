@@ -32,5 +32,5 @@ alwaysApply: true
 ## 参考
 
 - `post-task-workflow.mdc` — 完整收尾流程
-- `task-priority-workflow.mdc` — 任务前后必做
+- `task-priority-workflow.mdc` — 任务前后必做；开发流程以本规则与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准
 - `graphiti-memory.mdc` — Graphiti 查询与记录约定

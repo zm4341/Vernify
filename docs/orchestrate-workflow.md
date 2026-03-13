@@ -136,6 +136,8 @@
 
 ## 参考
 
+- **任务开始/结束完整流程**（Graphiti 必做 → GitNexus 代码类 → 读文档 → issue+分支 → SubAgent；任务结束 detect_changes → commit → Graphiti → 文档 → PR）：见 `task-priority-workflow.mdc`、`docs/CLAUDE-CURSOR-COLLABORATION.md`。
+
 | 资源 | 路径 |
 |------|------|
 | Cursor 命令 | `.cursor/commands/orchestrate.md` |

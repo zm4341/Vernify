@@ -32,13 +32,14 @@ gitnexus_impact(target="<symbolName>", direction="upstream")
 ```
 - 结果为 HIGH/CRITICAL → 先告知用户再动手
 
-### 任务结束：写入 Graphiti
+### 任务结束：detect_changes → commit/push → Graphiti → 文档/配置 → PR
 
-完成有实际变更或得出结论的任务后，必须：
+完成有实际变更或得出结论的任务后，必须（以 `docs/CLAUDE-CURSOR-COLLABORATION.md` 与 Cursor 侧 `task-priority-workflow.mdc` 为准）：
 
-1. `add_episode` 记录任务摘要（做了什么、关键结论）
-2. 必要时更新 `docs/`：架构变更 → `docs/architecture/ARCHITECTURE.md`
-3. **整体重构**：写入前检索既有记忆，发现错误先删再写，不仅追加
+1. **detect_changes**（有代码变更时）：验证只修改了预期符号，再 **commit/push**
+2. **Graphiti 记录**：`add_memory` 记录任务摘要（做了什么、关键结论）；整体重构（写入前检索既有记忆，发现错误先删再写，不仅追加）
+3. **更新文档/配置**（有架构/配置变更时）：架构变更 → `docs/architecture/ARCHITECTURE.md` 等
+4. **PR**（有代码/配置变更时）：创建 Pull Request 关联 issue（Fixes #N），等用户确认，不自行 merge 或删分支
 
 ---
 
@@ -99,7 +100,7 @@ gitnexus_impact(target="<symbolName>", direction="upstream")
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Vernify** (1613 symbols, 2977 relationships, 94 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Vernify** (1622 symbols, 2991 relationships, 94 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

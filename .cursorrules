@@ -20,9 +20,9 @@
 
 ## 规则入口
 
-- 完整规则在 **.cursor/rules/**，例如 `project-structure.mdc`、`agent-orchestration.mdc`、`task-priority-workflow.mdc`、`post-task-workflow.mdc`。
+- 完整规则在 **.cursor/rules/**，例如 `project-structure.mdc`、`agent-orchestration.mdc`、`task-priority-workflow.mdc`、`graphiti-first-per-message.mdc`、`post-task-workflow.mdc`。
 - 在满足规则前提下，优先**一次选对路径、少重复探索**，以控制上下文与 Token。
-- 任务开始：先 **Graphiti 检索**、必要时读文档，再撰写 **issue**（可委托 github SubAgent）、**建 issue 后立即切分支**（feat/fix/docs/refactor），调用相关 SubAgent；任务结束后先 **记录 Graphiti**、委托 SubAgent 更新文档、再撰写 **PR**（Fixes #N）；**PR 创建后等用户确认**，不自行 merge 或删分支。涉及代码分析、查找、重构时委托 code-navigator（Serena）。
+- **每条用户消息**：先根据用户本条消息是否要求产出代码/配置/文档变更判定「对话」与「开发」：开发则走完整流程（含 GitNexus、issue+分支、委托 SubAgent、不直接改代码）；对话则只做 Graphiti 前后。**以主 Agent 行为为触发**：一旦要查代码即先委托 GitNexus；一旦要改代码即视为进入开发流程，按完整流程做。（1）**Graphiti 前后**（始终做）：先委托 **graphiti-memory** 检索长期记忆，对话后委托 **graphiti-memory** 更新长期记忆，硬性规定。（2）**开发流程**（有开发/修复/功能任务时才走）：任务开始 ① Graphiti → ② GitNexus → ③ 读文档 → ④ issue+分支 → ⑤ SubAgent；改代码前 impact；任务结束 detect_changes → commit/push → Graphiti 记录 → 文档/配置 → PR。**只有当没有开发流程时**才只做 Graphiti 前后；有开发流程时必须走完整流程，不要只做 Graphiti 前后。主 Agent 不直接改代码/配置/文档，一律委托 SubAgent。GitHub 操作（issue/PR）委托 **github** SubAgent，使用官方 GitHub MCP，见 .cursor/agents/github.md。见 `graphiti-first-per-message.mdc`、`task-priority-workflow.mdc`、`docs/CLAUDE-CURSOR-COLLABORATION.md`；涉及代码分析、查找、重构时委托 code-navigator（Serena）。
 - 页面/UI 修改（含 Web/app/、Web/components/ 下任何写操作）须委托 **page-maker**，主 Agent 不得直接改页面代码。
 
 ## 运行方式

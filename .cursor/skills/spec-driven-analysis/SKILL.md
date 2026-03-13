@@ -84,3 +84,4 @@ Then  [可观察的结果]
 - 分析完成后 → **Serena 分析代码结构**（`serena-code-structure`）→ **TDD 计划与实现**（`tdd-plan-and-implement`）。
 - 不要跳过分析直接写代码。
 - 参考：[Spec Kit - Specify](https://github.com/github/spec-kit)、[OpenSpec - Agree before you build](https://github.com/Fission-AI/OpenSpec)。
+- 开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。

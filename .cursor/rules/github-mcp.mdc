@@ -1,0 +1,30 @@
+---
+description: 使用官方 GitHub MCP 进行 issue/PR 操作；主 Agent 委托 github SubAgent，不得自行调 gh CLI 完成 GitHub 流程。
+---
+
+# GitHub MCP 与 github SubAgent
+
+Vernify 使用**官方 GitHub MCP**（ghcr.io/github/github-mcp-server），配置在 `.cursor/mcp.json` 的 `"github"`。所有 GitHub 相关操作（创建/关联 issue、创建 PR、评论等）由主 Agent **委托 github SubAgent** 执行，主 Agent **不得自行调用 gh CLI** 完成 issue/PR 流程。
+
+## 何时委托 github SubAgent
+
+- **任务前（开发/修复/功能任务时）**：需要创建或关联 issue 时，委托 **github** SubAgent（见 `task-priority-workflow.mdc` 步骤 4「GitHub issue + 切分支」）。
+- **任务后（有代码/配置变更时）**：需要创建 Pull Request、关联 `Fixes #N` 时，委托 **github** SubAgent（见 `task-priority-workflow.mdc`「做事后」撰写 PR 步骤）。
+- 列出 open issues、对 issue/PR 添加评论等，同样委托 **github** SubAgent。
+
+## 优先使用 GitHub MCP
+
+- github SubAgent 执行时**必须使用 GitHub MCP**（`call_mcp_tool(server="github", toolName="...", arguments={...})`），工具包括但不限于：`issue_write`、`create_pull_request`、`add_issue_comment`、`list_issues`、`list_pull_requests`。
+- SubAgent 定义与工作流程见 **.cursor/agents/github.md**；调用前须查看 MCP 工具 schema 确认参数（如 owner, repo, title, body, head, base）。
+
+## 与 task-priority-workflow 一致
+
+- 步骤 4「GitHub issue + 切分支」：委托 **github** SubAgent（GitHub MCP）创建或关联 issue；创建 issue 后立即切出 feat/fix/docs/refactor 分支。
+- 「做事后」撰写 PR：委托 **github** SubAgent（GitHub MCP）创建 PR，正文含 `Fixes #N`；PR 创建后**必须等待用户确认**，AI 不得自行 merge 或删除分支。
+
+## 参考
+
+- `task-priority-workflow.mdc` — 任务前后必做；issue/PR 步骤与本节一致
+- `agent-orchestration.mdc` — 任务类型表中 GitHub 操作 → 委托 **github** SubAgent
+- `.cursor/agents/github.md` — github SubAgent 定义与工具声明
+- `docs/GITHUB-MCP.md` — 项目内 GitHub MCP 配置说明

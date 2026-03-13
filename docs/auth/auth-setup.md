@@ -90,3 +90,18 @@
 - **处理**：在 `.env` 中设置 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 与 `SUPABASE_ANON_KEY` 相同的 JWT 值。
 - **原因 2**：`NEXT_PUBLIC_SUPABASE_URL` 与访问页不同源（如通过 `http://vernify.local:38080` 访问，但 URL 配置为 `http://localhost:38080`），导致 CORS 或连接失败。
 - **处理**：`NEXT_PUBLIC_SUPABASE_URL` 需与访问页同源，例如通过 vernify.local 访问则设为 `http://vernify.local:38080`。
+
+## 超级管理员账号
+
+登录后台（如 `http://localhost:38080/login?next=%2Fadmin`）使用的超级管理员凭据：
+
+- **邮箱**：`admin@vernify.local`
+- **密码**：`.Withlxf911,`（**末尾有英文逗号**）
+
+若该账号不存在或密码错误，在**本机**（非容器内）执行：
+
+```bash
+cd Web && npm run ensure-super-admin
+```
+
+脚本会使用 `Web/.env` 中的 `NEXT_PUBLIC_SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY`，对 GoTrue 调用 Admin API：存在则重置密码并确保 `profiles.role = admin`，不存在则创建该用户并设为 admin。**请确保 `SUPABASE_SERVICE_ROLE_KEY` 已填为有效的 service_role JWT**（与 GoTrue 的 JWT_SECRET 一致），否则会报 "User not allowed"。

@@ -5,7 +5,7 @@ alwaysApply: true
 
 # 任务完成后必做流程
 
-**完成任何有实际变更或得出结论的任务后**（含查询类任务得出结论），必须执行以下两条规则，**不得遗漏**。**最高优先级，自动化**，主 Agent 和 SubAgent 均须遵循，无需用户提醒。见 `task-priority-workflow.mdc`。
+**完成任何有实际变更或得出结论的任务后**（含查询类任务得出结论），必须执行以下两条规则，**不得遗漏**。**最高优先级，自动化**，主 Agent 和 SubAgent 均须遵循，无需用户提醒。任务结束完整步骤（detect_changes → commit/push → Graphiti 记录 → 更新文档/配置 → PR）以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 交付前（与 task-priority-workflow 一致）
 

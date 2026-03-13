@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "compile": "python3 vernify_compiler.py"
+    "compile": "python3 vernify_compiler.py",
+    "ensure-super-admin": "node -r ./scripts/load-env.js scripts/ensure-super-admin.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.30",

@@ -5,16 +5,23 @@ alwaysApply: true
 
 # 任务前后必做（最高优先级、自动化）
 
+本流程与 **docs/CLAUDE-CURSOR-COLLABORATION.md**、**AGENTS.md**、**CLAUDE.md** 一致；任务开始时先检索 Graphiti、任务结束后写入 Graphiti 与 Claude Code 侧对齐，两工具共同遵循。
+
 ## ⚠️ 任务开始时：先检索（必做，不得跳过）
 
+**「任务开始」= 每次用户发送消息、每轮对话开始。** 见 `graphiti-first-per-message.mdc`。
+
 **主 Agent 在做任何事之前，必须先执行 Graphiti 检索，不得跳过。** 此步骤为最高优先级，无可例外。
+
+**判断本条消息是否为「开发」**：若用户请求涉及或隐含代码/配置/文档变更（修 bug、加功能、改配置、改规则、实现、重构等），则视为开发任务，必须走 2～5 步及改代码前 impact、任务结束 detect_changes→commit→Graphiti→文档/配置→PR；若仅为解释、询问、澄清、纠正、检索/问答且无变更产出要求，则视为对话，可只做 1 与对话后 Graphiti。**以主 Agent 行为为触发**：一旦主 Agent 要**查代码**（如 SemanticSearch、Grep、Read 查代码库），就应先委托 GitNexus（detect_changes、query）；一旦要**改代码/配置/文档**（StrReplace、Write），即视为已进入开发流程，按完整流程做（含 issue+分支、impact、委托 SubAgent 改、不直接改、结束后 detect_changes→commit→Graphiti→PR）。判定标准详见 `graphiti-first-per-message.mdc`「如何判断：本条消息是对话还是开发」。
 
 每次任务/对话**开始时**，主 Agent 必须**按序**执行（Rules/Skills 统一约定）：
 
 1. **Graphiti 检索（必做，不得跳过）**：**必须**委托 **graphiti-memory** SubAgent 执行（主 Agent 不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`）；检索与当前任务相关的偏好、程序、事实并遵循检索结果执行。
+   - **长任务开发阶段跟踪**：检索须包含「当前开发阶段」或「当前任务阶段」；主 Agent 根据检索结果恢复当前环节与下一步。进入开发流程后，每完成或用户确认一个阶段（如需求分析、计划确认、TDD 实现、验证、PR 创建、合并、分支清理），须委托 **graphiti-memory** **更新**当前阶段与下一步。阶段名与 spec-driven-tdd、post-task-workflow 及 PR/分支清理一致。
 2. **GitNexus 索引检查（代码类任务必做）**：**必须**委托 **gitnexus** SubAgent 执行（主 Agent 不得自行调用 GitNexus MCP）；执行 detect_changes，若返回 stale 先安排 `npx gitnexus analyze`，再用 query 理解相关代码结构并向主 Agent 回报摘要。纯问答/纯检索任务可跳过。
 3. **必要时读项目文档**：**仅当 Graphiti 检索后上下文仍不足时**读 `docs/`（如 docs/architecture/ARCHITECTURE.md、docs/architecture/PRD.md）、`.cursor/` 下相关规则或 README，避免重复。
-4. **GitHub issue + 切分支（开发/修复/功能任务时）**：**仅当有实际开发、修复或功能任务时**创建或关联 issue（纯问答、纯检索类任务不需要）；描述问题/需求、验收条件，或确认用户已创建；可委托 **github** SubAgent 创建。**创建 issue 后立即切出对应功能分支**（`feat/xxx`、`fix/xxx`、`docs/xxx`、`refactor/xxx`），不得在 main 上直接提交代码变更。再执行后续步骤。
+4. **GitHub issue + 切分支（开发/修复/功能任务时）**：**仅当有实际开发、修复或功能任务时**创建或关联 issue（纯问答、纯检索类任务不需要）；描述问题/需求、验收条件，或确认用户已创建；委托 **github** SubAgent（GitHub MCP）创建，见 .cursor/agents/github.md、.cursor/rules/github-mcp.mdc。**创建 issue 后立即切出对应功能分支**（`feat/xxx`、`fix/xxx`、`docs/xxx`、`refactor/xxx`），不得在 main 上直接提交代码变更。再执行后续步骤。
 5. **必要时 Serena / 调用相关 SubAgent**：若涉及代码分析、查找、重构，委托 **code-navigator**（使用 Serena）；其他具体操作按任务类型委托对应 SubAgent（见 `agent-orchestration.mdc`）。
 
 **查询、更新文档、记录** 是最高优先级，应**自动化**执行。主 Agent 和 SubAgent 均须遵循，**无需用户每次提醒**。
@@ -36,9 +43,9 @@ alwaysApply: true
 **有了结论后**（包括查询类任务得出结论、代码变更、配置变更等），必须**自动**执行：
 
 1. **commit/push（有代码/配置变更时）** - 先委托 **gitnexus** SubAgent 执行 `detect_changes()` 验证只修改了预期符号，再 commit/push 落地。
-2. **Graphiti 记录** - 须委托 **graphiti-memory** SubAgent 执行写入（主 Agent 不得让用户手动执行）；按 graphiti-memory.mdc 约定用 `add_memory` 记录本次结论/变更（本 MCP 无 add_episode）；**记录时按文档整体重构记忆**：需根据所有 Vernify 文档理解整体重构记忆（删除/修正错误、使全部记忆与文档一致），不只追加；若发现既有记忆与当前事实不符，先修正错误记忆（删除或改写）再写入。见 `graphiti-memory.mdc`。
+2. **Graphiti 记录（硬性规定）** - **每次做完事情都必须写入 Graphiti**，为硬性规定。须委托 **graphiti-memory** SubAgent 执行写入（主 Agent 不得让用户手动执行）；按 graphiti-memory.mdc 约定用 `add_memory` 记录本次结论/变更（本 MCP 无 add_episode）；**记录时按文档整体重构记忆**：需根据所有 Vernify 文档理解整体重构记忆（删除/修正错误、使全部记忆与文档一致），不只追加；若发现既有记忆与当前事实不符，先修正错误记忆（删除或改写）再写入。见 `graphiti-memory.mdc`、`graphiti-first-per-message.mdc`。
 3. **更新文档与配置（有架构/配置变更时）** - 委托 **docs-updater** 更新 `docs/`、`MIGRATION.md` 等；委托 **project-updater** 更新受影响的 Rules、Skills、SubAgents、Commands。
-4. **撰写 PR（有代码/配置变更时）** - 推送分支后在 GitHub 创建 Pull Request（关联对应 issue，使用 `Fixes #N`）；可委托 **github** SubAgent 或衔接 finishing-a-development-branch。**PR 创建后必须等待用户确认，AI 不得自行 merge 或删除分支。**
+4. **撰写 PR（有代码/配置变更时）** - 推送分支后在 GitHub 创建 Pull Request（关联对应 issue，使用 `Fixes #N`）；委托 **github** SubAgent（GitHub MCP）创建，见 .cursor/agents/github.md、.cursor/rules/github-mcp.mdc；可衔接 finishing-a-development-branch。**PR 创建后必须等待用户确认，AI 不得自行 merge 或删除分支。**
 
 ## 主 Agent 的职责
 
@@ -56,6 +63,8 @@ alwaysApply: true
 
 ## 参考
 
+- `docs/CLAUDE-CURSOR-COLLABORATION.md` — Claude Code × Cursor 协作文档，工作流以之为准
+- `graphiti-first-per-message.mdc` - 任务开始=每条用户消息；先检索 Graphiti 不可跳过
 - `docs/GITHUB-WORKFLOW.md` - 任务前 issue、解决后 PR 约定
 - `post-task-workflow.mdc` - 完整收尾流程
 - `graphiti-memory.mdc` - Graphiti 查询与记录

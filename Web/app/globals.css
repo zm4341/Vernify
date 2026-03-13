@@ -11,8 +11,8 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* 保留橡皮筋效果 */
-    overscroll-behavior: auto;
+    /* 禁用橡皮筋/回弹，避免落地页 overscroll 体验差 */
+    overscroll-behavior: none;
     /* 实色背景作为后备，防止露出白色 */
     background-color: #0c0118 !important;
     /* 渐变背景叠加在实色之上 */

@@ -25,3 +25,7 @@
 ## 下游
 
 `/plan` → confirm → 执行 → `/verify` → `/orchestrate code-review`
+
+## 参考
+
+- 开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准

@@ -65,6 +65,7 @@ description: Vernify 页面制作工作流。设计须调用 ui-ux-pro-max、参
 ## 引用（设计时必须遵循）
 
 - **Rule**：`.cursor/rules/page-maker.mdc`（页面制作规范，含设计前必做流程；设计须用 ui-ux-pro-max、Graphiti 与文档参考）
+- 任务开始完整步骤以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准
 - **SubAgent**：`.cursor/agents/page-maker.md`（页面制作专家）
 - **Command**：`/page-maker`（执行页面制作工作流，可带参数如 `/page-maker Admin`）
 - **必用 Skill**：**ui-ux-pro-max**（设计系统，生成或确认风格、配色、字体）

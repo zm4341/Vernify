@@ -89,6 +89,8 @@ REFACTOR → 质量提升，测试仍通过
 - Supabase RLS 每张表必须配置
 - Token 存 httpOnly cookie，禁止 localStorage
 
+开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
+
 ---
 
 ## 可执行清单（日常对照）

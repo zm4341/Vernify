@@ -1,6 +1,6 @@
 # GitHub 工作流约定
 
-项目已上 GitHub。以下约定与 `.cursor/rules/task-priority-workflow.mdc`、`development-workflow.mdc` 及 finishing-a-development-branch 流程一致。技术栈与协作方式：Vernify 为 Next.js + FastAPI + Supabase + Docker；Cursor/Claude Code 通过 **github** SubAgent 与 **finishing-a-development-branch** 与 GitHub 协作。
+项目已上 GitHub。以下约定与 `.cursor/rules/task-priority-workflow.mdc`、`development-workflow.mdc` 及 finishing-a-development-branch 流程一致。**开发流程以 task-priority-workflow.mdc 与 docs/CLAUDE-CURSOR-COLLABORATION.md 为准。**技术栈与协作方式：Vernify 为 Next.js + FastAPI + Supabase + Docker；Cursor/Claude Code 通过 **github** SubAgent 与 **finishing-a-development-branch** 与 GitHub 协作。
 
 ## 核心概念（简短）
 
@@ -64,7 +64,11 @@
 
 ## GitHub 操作与 SubAgent
 
-创建 issue、创建 PR、在 PR 中关联 issue 等 **GitHub 操作**由主 Agent 委托 **github** SubAgent 执行（使用 `gh` CLI）。若用户希望自行操作，可跳过委托，按本文档中的约定在 GitHub 网页或本地 `gh` CLI 完成（如 `gh issue create`、`gh pr create --fill`）。
+创建 issue、创建 PR、在 PR 中关联 issue 等 **GitHub 操作**由主 Agent 委托 **github** SubAgent 执行，使用**官方 GitHub MCP**（见 `docs/GITHUB-MCP.md`），不再依赖 gh CLI。若用户希望自行操作，可跳过委托，按本文档中的约定在 GitHub 网页或本地完成。
+
+### GitHub MCP 与 github SubAgent
+
+项目内 GitHub 的 MCP 配置、SubAgent 与 Rule 说明见 **docs/GITHUB-MCP.md**（配置在 .cursor/mcp.json 的 `"github"`；主 Agent 通过 github SubAgent 委托 issue/PR 操作；SubAgent 与 Rule 见 .cursor/agents/github.md、.cursor/rules/github-mcp.mdc）。
 
 ## 与现有内容的关系
 

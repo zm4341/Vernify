@@ -99,12 +99,13 @@ alwaysApply: true
 
 ## 与 post-task-workflow 的关系
 
-完成本规范涉及的任一类维护后，**必须**再执行 **post-task-workflow**（见 `post-task-workflow.mdc`）：Graphiti 检查 → Serena 分析 → 重构 → 更新文档 → 同步 Rules/Skills/SubAgents/Commands → Graphiti 记录。
+完成本规范涉及的任一类维护后，**必须**再执行 **post-task-workflow**（见 `post-task-workflow.mdc`）：Graphiti 检查 → Serena 分析 → 重构 → 更新文档 → 同步 Rules/Skills/SubAgents/Commands → Graphiti 记录。任务开始/结束完整流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 配置文件清单
 
 ### Rules
 - `task-priority-workflow.mdc` - 任务前后必做（查询→做→更新文档→记录），最高优先级、自动化
+- `graphiti-first-per-message.mdc` - 每条用户消息开始时先委托 graphiti-memory 检索 Graphiti，不可跳过；任务开始=每轮对话开始
 - `agent-orchestration.mdc` - 主 Agent 编排原则（委托优先）
 - `auto-record-changes.mdc` - SubAgent 完成变更后必须自动查询与记录，主 Agent 第一动作为委托 post-task-reviewer
 - `project-structure.mdc` - 项目结构和技术栈
@@ -112,6 +113,8 @@ alwaysApply: true
 - `post-task-workflow.mdc` - 任务完成后必做流程
 - `refactor-convention.mdc` - 重构约定（简化结构、突出主干、移除冗余，不堆叠补充节点）
 - `llm-config.mdc` - LLM/LiteLLM 配置变更后必须委托记录（见需要更新的场景 §5）
+- `gitnexus.mdc` - GitNexus MCP 使用约定；主 Agent 须委托 gitnexus SubAgent，不得自行调用
+- `github-mcp.mdc` - 使用官方 GitHub MCP 进行 issue/PR 操作；主 Agent 委托 github SubAgent，不得自行调 gh CLI
 
 ### SubAgents
 - `docker-expert.md` - Docker 配置
@@ -122,6 +125,7 @@ alwaysApply: true
 - `docs-updater.md` - 项目文档更新（docs/、docs/architecture/ARCHITECTURE.md）
 - `project-updater.md` - 项目配置维护（.cursor/ Rules、SubAgents、Skills、Commands）
 - `post-task-reviewer.md` - 任务完成后必做流程
+- `gitnexus.md` - 代码知识图谱（GitNexus MCP；任务开始/改代码前/提交前委托）
 
 ### Skills
 - 8 个通用工具 skills

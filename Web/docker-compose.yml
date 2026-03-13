@@ -232,9 +232,9 @@ services:
       - GOTRUE_DB_DRIVER=postgres
       - GOTRUE_DB_DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vernify}?search_path=auth
       - GOTRUE_SITE_URL=${SITE_URL:-http://localhost:3000}
-      - GOTRUE_URI_ALLOW_LIST=${ADDITIONAL_REDIRECT_URLS}
+      - GOTRUE_URI_ALLOW_LIST=${ADDITIONAL_REDIRECT_URLS:-}
       - GOTRUE_DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}
-      - GOTRUE_JWT_ADMIN_ROLES=service_role
+      - GOTRUE_JWT_ADMIN_ROLES=service_role,postgres
       - GOTRUE_JWT_AUD=authenticated
       - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
       - GOTRUE_JWT_EXP=${JWT_EXPIRY:-3600}

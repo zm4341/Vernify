@@ -1,0 +1,64 @@
+---
+description: 对话前必须先委托 graphiti-memory 检索 Graphiti；对话后必须委托 graphiti-memory 更新 Graphiti 长期记忆；均为硬性规定，不可跳过。与 task-priority-workflow 衔接。
+alwaysApply: true
+---
+
+# 每条用户消息：先检索 Graphiti（必做），对话后更新 Graphiti（必做）
+
+**「任务开始」= 每次用户发送消息 / 每轮对话开始。** 与本规则及 `task-priority-workflow.mdc` 一致。
+
+## 两件事不要搞混
+
+- **（1）Graphiti 前后**：对话时先 Graphiti 查询长期记忆、结束对话后更新 Graphiti 长期记忆。——这是**始终要做的硬性规定**（每条消息都做）。
+- **（2）开发流程**：任务开始 ① Graphiti → ② GitNexus → ③ 读文档 → ④ issue+分支 → ⑤ SubAgent；改代码前 impact；任务结束 detect_changes → commit/push → Graphiti 记录 → 文档/配置 → PR。——这是**有开发/修复/功能任务时才走的完整流程**。
+
+**只有当没有开发流程的时候**（纯问答、纯检索、无代码/配置变更、无 issue/PR），才**只做**「先 Graphiti 检索、对话后更新 Graphiti」这件事。**有开发流程时**，必须走完整流程，Graphiti 只是其中第一步和任务结束里的一环，不要用「只做 Graphiti 前后」代替开发流程。
+
+### 如何判断：本条消息是对话还是开发
+
+- **算「对话」**（只做 Graphiti 前后，不走 GitNexus/issue/分支/commit/PR）：用户本条消息**不要求产出任何代码、配置或文档变更**，仅为解释、说明、总结、询问（如「说说流程」「为什么」「怎么判断」）、澄清、纠正理解、给建议、或仅做检索/问答。例如：「你说说现在的开发流程」「你不要和开发流程搞混」「你明白我在说什么吗」「为什么没有按流程做」。
+- **算「开发」**（走完整开发流程，且主 Agent 不直接 StrReplace/Write）：用户本条消息**要求或隐含要求产出代码/配置/文档变更**，如修 bug、加功能、改配置、改规则/文档、实现某需求、重构、更新某处文案或逻辑。例如：「页面还是会自动重载」「把需要这个流程的地方进行更新」「修一下 xxx」。
+
+**以主 Agent 行为为触发（优先）：**
+- **一旦主 Agent 要查代码**（例如准备用 SemanticSearch、Grep、Read 等查代码库），就**应先委托 GitNexus**（detect_changes、query），再查；即「要查代码」就调用 GitNexus，不必等用户明确说「开发」。
+- **一旦主 Agent 要改代码/配置/文档**（例如准备 StrReplace、Write），即视为**已进入开发流程**，必须按完整开发流程做：此前应有 issue+分支；改前委托 gitnexus 做 impact；改由 SubAgent 执行，主 Agent 不直接改；结束后 detect_changes → commit/push → Graphiti 记录 → 文档/配置 → PR。
+
+主 Agent 每条消息开始时先做 Graphiti 检索，然后根据上述「用户请求」判定或「自身行为」触发决定：若为开发则按 task-priority-workflow 从第 ② 步起执行（GitNexus → 读文档 → issue+分支 → SubAgent），且不直接改代码/配置/文档；若为对话则只做检索与回复，对话后更新 Graphiti。
+
+## 硬性要求（Graphiti 前后）
+
+每次用户与主 Agent 对话时，主 Agent 必须：
+
+1. **先委托 graphiti-memory SubAgent 检索 Graphiti 长期记忆**（与当前对话/任务相关的偏好、程序、事实），不得跳过。
+2. **再**根据检索结果与用户消息进行回复或执行后续步骤（有开发任务时则按 task-priority-workflow 走完整流程，含委托其他 SubAgent）。
+
+每次主 Agent **做完事情**后，**必须**委托 **graphiti-memory** 更新 Graphiti 长期记忆（`add_memory` 记录本次结论/变更）；不得跳过，无需用户提醒。
+
+主 Agent 不得自行调用 Graphiti MCP，不得让用户手动执行 `/graphiti-memory`。
+
+## 完整开发流程（有开发/修复/功能任务时必走，不可只做 Graphiti 前后）
+
+完整流程摘要（与 `task-priority-workflow.mdc` 一致）：
+
+- **任务开始（按序）**：① Graphiti 检索（必做）→ ② GitNexus（代码类：detect_changes、query）→ ③ 读文档（不足时）→ ④ issue + 切分支（开发/修复/功能类）→ ⑤ 调用相关 SubAgent（主 Agent 不直接 StrReplace/Write）。
+- **改代码前**：委托 gitnexus 执行 impact。
+- **任务结束**：detect_changes → commit/push → Graphiti 记录 → 更新文档/配置（有变更时）→ PR（等用户确认）。
+
+以 task-priority-workflow.mdc 与 docs/CLAUDE-CURSOR-COLLABORATION.md 为准。
+
+## 与现有流程的衔接
+
+- 对话前检索、对话后更新 Graphiti 的硬性规定与 **docs/CLAUDE-CURSOR-COLLABORATION.md**、**CLAUDE.md** 中「任务开始检索 Graphiti / 任务结束写入 Graphiti」一致。
+- 完整「任务开始时」步骤顺序见 **`task-priority-workflow.mdc`**（Graphiti 检索 → GitNexus（代码类）→ 读文档 → issue/分支 → SubAgent）。
+- Graphiti 检索与写入约定见 **`graphiti-memory.mdc`**。
+
+## 运行与部署说明（回答时须遵循）
+
+回答部署/运行方式时，**不得假设本机 `npm run dev`、`uvicorn` 或挂载源码等例外**。**Vernify 所有服务均在 Docker 中运行**；开发与生产均通过 Docker Compose，入口为 Caddy（如 `http://127.0.0.1:38080/`）。见 `project-structure.mdc`。
+
+## 参考
+
+- `docs/CLAUDE-CURSOR-COLLABORATION.md` — Claude Code × Cursor 协作文档，工作流以之为准
+- `task-priority-workflow.mdc` - 任务开始时完整步骤
+- `graphiti-memory.mdc` - Graphiti 检索与记录约定
+- `agent-orchestration.mdc` - 委托 graphiti-memory 的编排约定

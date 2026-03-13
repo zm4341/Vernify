@@ -21,6 +21,8 @@ alwaysApply: true
 | [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) | 规模自适应；结构化工作流 |
 | [模块化编程](https://zh.wikipedia.org/wiki/模块化编程) | 高内聚低耦合；接口与实现分离 |
 
+任务开始/收尾的完整步骤（Graphiti 必做 → GitNexus 代码类 → 读文档 → issue+分支 → SubAgent；任务结束 detect_changes → commit → Graphiti → 文档 → PR）以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
+
 ## 编排原则（agent-orchestration）
 
 主 Agent 只负责沟通与拆解；**所有具体操作必须委托 SubAgent**。见 `agent-orchestration.mdc`。

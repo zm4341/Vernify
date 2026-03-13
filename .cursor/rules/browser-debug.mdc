@@ -49,3 +49,7 @@ alwaysApply: true
 - **`http://127.0.0.1:38080/`**（Vernify 前后端均在 Docker 中运行，经 Caddy 统一入口）
 
 调试前确认 Docker 已启动：`cd Web && docker compose -f docker-compose.yml -f docker-compose.dev.yml -p vernify up -d`
+
+## 参考
+
+- 开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准

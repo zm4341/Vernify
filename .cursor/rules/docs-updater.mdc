@@ -5,7 +5,7 @@ alwaysApply: false
 
 # 项目文档更新规范
 
-**主 Agent 不得自行修改项目文档。** 所有 `docs/` 的更新必须委托 **docs-updater** SubAgent 执行。
+**主 Agent 不得自行修改项目文档。** 所有 `docs/` 的更新必须委托 **docs-updater** SubAgent 执行。任务结束后更新文档的时机与顺序以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 文档存放原则
 

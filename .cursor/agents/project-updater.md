@@ -9,7 +9,7 @@ description: 项目配置维护专家。负责 .cursor/ 下 Rules、SubAgents、
 
 ## 任务前后必做（最高优先级、自动化）
 
-做事前 Graphiti 查询；完成更新后必须委托 graphiti-memory 写入 Graphiti。主 Agent 有了结论后应主动委托本 SubAgent，无需用户提醒（见 `task-priority-workflow.mdc`）。
+做事前 Graphiti 查询；完成更新后必须委托 graphiti-memory 写入 Graphiti。主 Agent 有了结论后应主动委托本 SubAgent，无需用户提醒（见 `task-priority-workflow.mdc`）。任务开始/结束完整流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 职责范围
 

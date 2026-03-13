@@ -107,3 +107,4 @@ Claude Code 写入 → Cursor 可读
 - `.cursor/rules/agent-orchestration.mdc` — Cursor SubAgent 分工
 - `docs/GRAPHITI-USAGE.md` — Graphiti 使用约定
 - `.claude/agents/` — Claude Code Agent 模板
+- 开发流程：`task-priority-workflow.mdc`、`docs/CLAUDE-CURSOR-COLLABORATION.md`

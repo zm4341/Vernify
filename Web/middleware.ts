@@ -15,19 +15,19 @@ function isAuthPath(pathname: string) {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 静态资源、API、_next 等跳过
+  // 静态资源、API、_next 等不刷新 session，直接放行，避免每次 RSC/API 请求都跑 updateSession 导致频繁 Set-Cookie 引发整页重载
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.includes('.') ||
     pathname === '/favicon.ico'
   ) {
-    try {
-      const result = await updateSession(request);
-      return result.response;
-    } catch {
-      return NextResponse.next({ request });
-    }
+    return NextResponse.next({ request });
+  }
+
+  // 落地页 "/" 不调用 updateSession，避免 session 刷新导致响应头变化、引发部分环境下「隔一段时间刷新」的体感
+  if (pathname === '/') {
+    return NextResponse.next({ request });
   }
 
   let response: NextResponse;

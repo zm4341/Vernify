@@ -87,3 +87,7 @@
 ## 与 Claude Code 协作
 
 复杂编排任务（git、构建、长时自动化）可通过 `/use-claude-code` 委托 Claude Code 执行。
+
+## 参考
+
+- 任务开始/结束完整流程：`task-priority-workflow.mdc`、`docs/CLAUDE-CURSOR-COLLABORATION.md`

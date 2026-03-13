@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## ⚠️ 任务开始必做：先 Graphiti 检索（不得跳过）
 
-主 Agent 在做任何事之前，**必须先**委托 **graphiti-memory** SubAgent 执行检索（主 Agent 不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`），**不得跳过**。详见 `task-priority-workflow.mdc`、`agent-orchestration.mdc`、`graphiti-memory.mdc`。
+主 Agent 在做任何事之前，**必须先**委托 **graphiti-memory** SubAgent 执行检索（主 Agent 不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`），**不得跳过**；与 **docs/CLAUDE-CURSOR-COLLABORATION.md** 约定一致。详见 `task-priority-workflow.mdc`、`agent-orchestration.mdc`、`graphiti-memory.mdc`。
 
 ---
 

@@ -25,3 +25,4 @@
 
 - Rule：`post-task-workflow.mdc`
 - Skill：`post-task-workflow`
+- 任务结束完整流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准

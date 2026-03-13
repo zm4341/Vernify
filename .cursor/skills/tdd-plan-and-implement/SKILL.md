@@ -97,3 +97,7 @@ description: 根据规格与 Serena 分析结果制定 TDD 计划，按 Red-Gree
 - 不写测试就直接写实现（除非用户明确说「只修一个小 typo」等 trivial 变更）。
 - 写一个永远通过的测试再改实现「凑绿」——测试必须曾失败且失败原因明确。
 - 跳过两阶段验收后直接宣称完成。
+
+## 参考
+
+- 任务收尾以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。

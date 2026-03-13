@@ -27,14 +27,21 @@ function LoginForm() {
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("登录超时，请重试或刷新页面")), LOGIN_TIMEOUT_MS)
       );
-      const { error: err } = await Promise.race([loginPromise, timeoutPromise]);
+      const { data: loginData, error: err } = await Promise.race([loginPromise, timeoutPromise]);
       if (err) {
         setError(err.message.includes("Invalid login credentials") ? "邮箱或密码错误" : err.message);
         return;
       }
       // 短暂延迟后整页跳转，确保 Supabase 已将 session 写入 cookie，服务端才能读到
       await new Promise((r) => setTimeout(r, 300));
-      window.location.href = next;
+      // 按角色决定跳转：超级管理员 → /admin，否则使用 next（默认 /courses）
+      const userId = loginData?.user?.id;
+      let redirectTo = next;
+      if (userId) {
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).single();
+        if (profile?.role === "admin") redirectTo = "/admin";
+      }
+      window.location.href = redirectTo;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "网络或服务异常，请重试";
       const isNetworkError =

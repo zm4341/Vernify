@@ -25,7 +25,7 @@ description: 主 Agent 只负责与用户讨论问题、反馈结果；所有具
 
 **交付前**：确保构建通过、已知错误已修复；不交付带构建失败或已知 bug 的结果（见 `task-priority-workflow.mdc`）。
 
-**有了结论后**：必须委托 post-task-reviewer 或 project-updater 更新文档、配置，并委托 graphiti-memory 记录。自动化执行，不等待用户提醒（见 `task-priority-workflow.mdc`）。
+**有了结论后**：必须委托 post-task-reviewer 或 project-updater 更新文档、配置，并委托 graphiti-memory 记录。自动化执行，不等待用户提醒（见 `task-priority-workflow.mdc`）。完整开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 委托矩阵
 

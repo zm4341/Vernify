@@ -13,13 +13,18 @@ alwaysApply: true
 
 ## 任务开始时：优先执行（Graphiti 检索为第一步，必做，不得跳过）
 
+**「任务开始」= 每次用户发送消息、每轮对话开始。** 见 `graphiti-first-per-message.mdc`。
+
 **主 Agent 在做任何事之前，必须先执行 Graphiti 检索，不得跳过。** 此为第一步，无可例外。
 
 每次任务/对话**开始时**，主 Agent 必须**按序**执行（与 `task-priority-workflow.mdc`、`graphiti-memory.mdc` 一致）：
 
 1. **Graphiti 检索（必做，不得跳过）**：**必须**委托 **graphiti-memory** SubAgent 执行（主 Agent 不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`）；检索与当前任务相关的偏好、程序、事实并遵循检索结果执行。
-2. **必要时 Serena**：若涉及代码分析、查找、重构，委托 **code-navigator**（使用 Serena）。
-3. **必要时读项目文档**：若上下文不足，先读 `docs/`（如 docs/architecture/ARCHITECTURE.md、docs/architecture/PRD.md）、`.cursor/` 下相关规则或 README。
+2. **GitNexus（代码类任务必做）**：**必须**委托 **gitnexus** SubAgent 执行索引检查与 query（主 Agent 不得自行调用 GitNexus MCP）。详见 `task-priority-workflow.mdc`。
+3. **必要时 Serena**：若涉及代码分析、查找、重构，委托 **code-navigator**（使用 Serena）。
+4. **必要时读项目文档**：若上下文不足，先读 `docs/`（如 docs/architecture/ARCHITECTURE.md、docs/architecture/PRD.md）、`.cursor/` 下相关规则或 README。
+
+上述顺序与 **docs/CLAUDE-CURSOR-COLLABORATION.md**、**CLAUDE.md** 约定一致，确保两工具行为一致。
 
 ## 创建文件前必做
 
@@ -54,6 +59,7 @@ alwaysApply: true
 **不得**直接做以下任何操作，一律委托 SubAgent：
 
 - **查找**、**分析**、搜索代码或文档 → 委托 **code-navigator**
+- **GitNexus 工具调用**（detect_changes、query、impact、context、rename、cypher 等）→ 委托 **gitnexus**
 - **读文件、改代码、写文档** → 委托对应 SubAgent（page-maker、code-navigator、docs-updater、project-updater 等），**主 Agent 不使用 StrReplace/Write**
 - 执行命令、运行测试 → 委托 tdd-executor / api-tester / browser-tester 等
 - 记忆检索与写入 → 委托 **graphiti-memory**
@@ -65,6 +71,7 @@ alwaysApply: true
 | 任务类型 | 委托 SubAgent | 说明 |
 |----------|---------------|------|
 | 代码搜索、架构理解、重构 | **code-navigator** | SemanticSearch / Serena 分析、符号查找、引用追踪；重构含义见 `refactor-convention.mdc` |
+| GitNexus（索引检查、query、impact、detect_changes 等）| **gitnexus** | 任务开始/改代码前/提交前由主 Agent 委托；主 Agent 不得自行调用 GitNexus MCP |
 | 前端代码修改、审查 | **frontend-reviewer** | Next.js/React 实现与审查、性能与类型 |
 | 页面/UI 制作 | **graphiti-memory** → **page-maker** | **必须**：先委托 graphiti-memory 检索与页面设计相关的偏好、程序、事实；必要时读取 `docs/architecture/ARCHITECTURE.md`、`docs/architecture/PRD.md` 等；再将完整上下文传给 page-maker 执行设计系统 + 代码实现 + 验证。含改链接、删 DOM、改样式、调布局；主 Agent 不得直接改 `Web/app/`、`Web/components/` 下任何代码 |
 | TDD 实现 | **tdd-executor** | 写测试 → 实现 → 跑测试并汇报 |
@@ -82,7 +89,7 @@ alwaysApply: true
 | 数据库查询/验证 | **database-tester** | Supabase MCP 查询、验证、数据修复 |
 | n8n 工作流创建/管理/验证 | **n8n-workflow** | 通过 n8n-mcp 创建、更新、校验、执行 workflow；见 n8n-mcp.mdc |
 | 代码审查（规格+质量） | **code-reviewer** | 对照计划与编码标准审查 |
-| GitHub 操作（创建/关联 issue、创建 PR、评论等） | **github** | 任务前创建或关联 issue（建 issue 后主流程切出 feat/fix/docs/refactor 分支）、解决后创建 PR（Fixes #N）；**不自行 merge 或删分支**，等用户确认；gh CLI 或 GitHub MCP |
+| GitHub 操作（创建/关联 issue、创建 PR、评论等） | **github** | 委托 **github** SubAgent（使用官方 GitHub MCP，见 .cursor/agents/github.md）；任务前创建或关联 issue、解决后创建 PR（Fixes #N）；**不自行 merge 或删分支**，等用户确认；主 Agent 不得自行调用 gh CLI 完成 issue/PR |
 | 复杂功能 7 阶段编排 | **code-explorer**（Phase 2）、**code-architect**（Phase 4）| `/orchestrate feature` 专用；由 orchestrate 命令在 Discovery→Exploration→Clarification→Architecture→Implementation→Review→Summary 各阶段委托 |
 
 ## 例外（极少）
@@ -107,5 +114,6 @@ alwaysApply: true
 
 ## 参考
 
+- `docs/CLAUDE-CURSOR-COLLABORATION.md` — Claude Code × Cursor 协作文档，工作流以之为准
 - SubAgent 清单：`.cursor/agents/README.md`
 - 技能：`agent-orchestration`

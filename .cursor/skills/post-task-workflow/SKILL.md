@@ -5,7 +5,7 @@ description: 任务完成后的必做流程——Graphiti 检查已做事项 →
 
 # 任务完成后必做流程
 
-完成任何有实际变更或得出结论的任务后（含查询类任务），必须执行本技能描述的两条流程。**最高优先级，自动化**，无需用户提醒。参考 Rule：`post-task-workflow.mdc`、`task-priority-workflow.mdc`。
+完成任何有实际变更或得出结论的任务后（含查询类任务），必须执行本技能描述的两条流程。**最高优先级，自动化**，无需用户提醒。任务结束完整步骤（detect_changes → commit → Graphiti → 文档 → PR）以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。参考 Rule：`post-task-workflow.mdc`、`task-priority-workflow.mdc`。
 
 ## 交付前验证（必做）
 

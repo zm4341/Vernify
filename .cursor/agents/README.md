@@ -1,6 +1,6 @@
 # Vernify 项目 SubAgents
 
-项目专用的 AI 子代理，针对特定任务提供专业指导。**任务开始时**可检索 Graphiti（关键词 **Cursor SubAgent 分工**）获取分工摘要；本页保留完整表与 `rules/agent-orchestration.mdc` 一致，便于维护与查阅。主 Agent 执行前须自检是否应委托，复合任务须拆步、每步委托对应 SubAgent。
+项目专用的 AI 子代理，针对特定任务提供专业指导。**任务开始时**可检索 Graphiti（关键词 **Cursor SubAgent 分工**）获取分工摘要；本页保留完整表与 `rules/agent-orchestration.mdc` 一致，便于维护与查阅。主 Agent 执行前须自检是否应委托，复合任务须拆步、每步委托对应 SubAgent。开发流程以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 编排原则（agent-orchestration）
 
@@ -11,6 +11,7 @@
 | 任务类型 | SubAgent | 说明 |
 |----------|----------|------|
 | 代码搜索、架构理解、重构 | **code-navigator** | SemanticSearch / Serena、符号查找、引用追踪 |
+| GitNexus（detect_changes、query、impact 等）| **gitnexus** | 任务开始/改代码前/提交前；主 Agent 不得自行调用 GitNexus MCP |
 | 前端代码修改、审查 | **frontend-reviewer** | Next.js/React 实现与审查、性能与类型 |
 | 页面/UI 制作 | **page-maker** | graphiti-memory 检索 → page-maker；设计须 ui-ux-pro-max + Graphiti 与文档 |
 | TDD 实现 | **tdd-executor** | 写测试 → 实现 → 跑测试并汇报 |
@@ -27,7 +28,7 @@
 | 数据库查询/验证 | **database-tester** | Supabase MCP 查询、验证、数据修复 |
 | 代码审查 | **code-reviewer** | 规格符合度 + 代码质量审查（参考 Superpowers）|
 | LaTeX 解析与同步 | **latex-parser** | 解析 LaTeX、同步到 DB |
-| GitHub 操作（创建/关联 issue、创建 PR、评论等） | **github** | 任务前创建或关联 issue（建 issue 后主流程会切出 feat/fix/docs/refactor 分支）、解决后创建 PR（Fixes #N）；**不自行 merge 或删分支**，等用户确认后由用户执行；使用 gh CLI 或 GitHub MCP，未安装或未认证时提示用户 |
+| GitHub 操作（创建/关联 issue、创建 PR、评论等） | **github** | 使用官方 GitHub MCP（mcp.json 中 github，见 .cursor/agents/github.md）；任务前创建或关联 issue、解决后创建 PR（Fixes #N）；**不自行 merge 或删分支**，等用户确认 |
 | 复杂功能 7 阶段编排 | **code-explorer**、**code-architect** | `/orchestrate feature` 专用；Phase 2/4 调用 |
 
 ## 已配置的 SubAgents（详细）
@@ -35,6 +36,7 @@
 | SubAgent | 用途 | 何时委托 |
 |----------|------|----------|
 | **code-navigator** | 代码搜索导航 | 查找代码、理解架构、追踪调用、重构 |
+| **gitnexus** | 代码知识图谱 | 任务开始 detect_changes+query、改代码前 impact、提交前 detect_changes；GitNexus MCP |
 | **frontend-reviewer** | 前端代码审查与修改 | Next.js/React 实现、审查、性能、类型 |
 | **page-maker** | 页面制作 | 新页面；设计流程含 page-maker Rule、ui-ux-pro-max Skill、Graphiti 与项目文档参考；设计系统 + 实现与验证 |
 | **tdd-executor** | TDD 计划执行 | 写测试→实现→跑测试 |
@@ -50,7 +52,7 @@
 | **llm-config** | LLM 配置管理 | 批改服务、模型切换、LiteLLM |
 | **database-tester** | 数据库操作 | Supabase 查询、验证、数据修复 |
 | **latex-parser** | LaTeX 解析与同步 | 解析 LaTeX、同步到 DB |
-| **github** | GitHub 操作 | 创建/关联 issue、创建 PR（Fixes #N）；不自行 merge/删分支，等用户确认；gh CLI 或 GitHub MCP |
+| **github** | GitHub 操作 | 使用官方 GitHub MCP（.cursor/mcp.json 中 github），见 .cursor/agents/github.md；创建/关联 issue、创建 PR（Fixes #N）；不自行 merge/删分支，等用户确认 |
 | **n8n-workflow** | n8n 工作流管理 | 通过 n8n-mcp 创建/更新/验证/执行 workflow；配合 n8n-skills |
 | **code-explorer** | 代码库探索 | `/orchestrate feature` Phase 2 专用；并行 2–3 个，追踪执行路径、映射架构 |
 | **code-architect** | 架构蓝图设计 | `/orchestrate feature` Phase 4 专用；并行 2–3 个，输出实现蓝图 |

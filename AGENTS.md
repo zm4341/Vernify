@@ -10,8 +10,8 @@
 
 **Graphiti 是所有 AI 工具的统一记忆存储**（group_id: `vernify`，endpoint: `http://localhost:19283/mcp/`）。Agent目录、命令列表、技能目录、架构细节、用户偏好均存于此。
 
-- **任务开始**：先执行 `search_nodes` + `search_facts` 检索相关知识，再开始执行
-- **任务结束**：`add_episode` 写入任务摘要；整体重构（先删错误再写，不仅追加）
+- **任务开始**：先 Graphiti 检索（必做）→ GitNexus 代码类（detect_changes、query）→ 读文档（不足时）→ issue+分支（开发/修复/功能类）→ SubAgent；改代码前 impact。以 `docs/CLAUDE-CURSOR-COLLABORATION.md` 与 `.cursor/rules/task-priority-workflow.mdc` 为准。
+- **任务结束**：detect_changes → commit/push → Graphiti 记录（`add_memory`，整体重构、先删错误再写）→ 更新文档/配置（有变更时）→ PR；PR 后等用户确认。以 `docs/CLAUDE-CURSOR-COLLABORATION.md` 与 `.cursor/rules/task-priority-workflow.mdc` 为准。
 - **Claude Code ↔ Cursor 共享**：双向读写，同一 group_id
 
 ---
@@ -205,7 +205,7 @@ setCount(count + 1)  // stale reference 风险
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Vernify** (1613 symbols, 2977 relationships, 94 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Vernify** (1622 symbols, 2991 relationships, 94 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

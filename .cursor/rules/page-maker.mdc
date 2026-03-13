@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## 目标
 
-制作或修改 Vernify 页面时，遵循统一流程：**Graphiti 检索** → **读取项目文档** → **设计系统确认** → 代码实现 → 验证。
+制作或修改 Vernify 页面时，遵循统一流程：**Graphiti 检索** → **读取项目文档** → **设计系统确认** → 代码实现 → 验证。任务开始时的完整步骤（先 Graphiti 必做，再 GitNexus/读文档/issue+分支 等）以 `task-priority-workflow.mdc` 与 `docs/CLAUDE-CURSOR-COLLABORATION.md` 为准。
 
 ## 页面设计必做流程（强制）
 

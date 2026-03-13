@@ -31,13 +31,14 @@ alwaysApply: false
 
 每次任务/对话开始时，主 Agent 必须**按序**执行（与 `task-priority-workflow.mdc`、`agent-orchestration.mdc` 一致）：
 
-1. **Graphiti 检索（必做，不得跳过）**：**主 Agent 必须委托 graphiti-memory SubAgent 执行**，不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`；由 graphiti-memory 使用 `search_nodes`、`search_memory_facts` 搜索与当前任务相关的偏好、程序、事实；主 Agent 遵循检索到的内容执行。
+1. **Graphiti 检索（必做，不得跳过）**：**主 Agent 必须委托 graphiti-memory SubAgent 执行**，不得自行调用 Graphiti MCP 或让用户手动执行 `/graphiti-memory`；由 graphiti-memory 使用 `search_nodes`、`search_memory_facts` 搜索与当前任务相关的偏好、程序、事实；**检索时须包含「当前开发阶段」或「当前任务阶段」**，主 Agent 据此恢复当前环节与下一步；主 Agent 遵循检索到的内容执行。阶段推进时（每完成或用户确认一个阶段），须委托 graphiti-memory **更新** Graphiti 中的当前阶段与下一步。
 2. **必要时 Serena**：若涉及代码分析、查找、重构，委托 code-navigator（使用 Serena）。
 3. **必要时读项目文档**：若上下文不足，先读 `docs/`（如 docs/architecture/ARCHITECTURE.md、docs/architecture/PRD.md）、`.cursor/` 下相关规则或 README。
 
 ## 开始任何任务之前（Graphiti 部分）
 
 - **始终先搜索**：使用 `search_nodes` 查找与当前任务相关的**偏好**、**程序**、**需求**；按实体类型过滤（`Preference`、`Procedure`、**`Requirement`**）以缩小范围。
+- **检索当前开发阶段**：检索时须包含「当前开发阶段」或「当前任务阶段」，主 Agent 据此恢复当前环节与下一步；阶段推进时须委托 graphiti-memory 更新 Graphiti 中的当前阶段与下一步。
 - **同时搜索事实**：使用 `search_memory_facts` 发现可能与任务相关的**关系和事实**。（说明：部分外部文档使用 `search_facts`，在 Vernify 中对应 Graphiti MCP 的 `search_memory_facts`。）
 - **审查所有匹配**：仔细查看匹配到的偏好、程序、需求与事实，并在后续执行中遵循。
 

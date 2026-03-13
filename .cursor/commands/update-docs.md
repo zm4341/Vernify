@@ -21,6 +21,7 @@
 - Rule：`.cursor/rules/docs-updater.mdc`
 - Skill：`.cursor/skills/docs-updater/SKILL.md`
 - SubAgent：`.cursor/agents/docs-updater.md`
+- 开发流程（任务结束更新文档时机）：`task-priority-workflow.mdc`、`docs/CLAUDE-CURSOR-COLLABORATION.md`
 
 ---
 

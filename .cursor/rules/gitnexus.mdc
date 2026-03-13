@@ -1,0 +1,64 @@
+---
+description: GitNexus MCP 使用约定。主 Agent 不得自行调用 GitNexus MCP，须委托 gitnexus SubAgent；任务开始/改代码前/提交前按流程委托。
+alwaysApply: false
+---
+
+# GitNexus 代码知识图谱规范
+
+**GitNexus** 将代码库索引为知识图谱（依赖、调用链、执行流），通过 MCP 暴露 `list_repos`、`query`、`context`、`impact`、`detect_changes`、`rename`、`cypher` 等工具，供 AI 理解影响范围、执行流与变更范围。
+
+## ⚠️ 主 Agent 不得自行调用 GitNexus MCP
+
+**主 Agent 不得自行调用 GitNexus MCP 工具。** 所有 GitNexus 相关操作（detect_changes、query、impact、context、rename、cypher 等）**必须委托 gitnexus SubAgent** 执行，与 Graphiti 委托 graphiti-memory、代码分析委托 code-navigator 一致。见 `agent-orchestration.mdc`、`task-priority-workflow.mdc`。
+
+## 委托时机（主 Agent 在以下时机委托 gitnexus SubAgent）
+
+| 时机 | 委托内容 | 说明 |
+|------|----------|------|
+| **任务开始时（代码类任务）** | detect_changes；若索引 stale 先安排 `npx gitnexus analyze`，再 query 理解相关代码结构 | 纯问答/纯检索可跳过 |
+| **改代码前** | impact(目标符号, direction: upstream) | 修改任何函数/类/方法前必做；HIGH/CRITICAL 须告知用户 |
+| **提交前** | detect_changes 验证只修改了预期符号与执行流 | 再执行 commit/push |
+
+其他需要「按概念查执行流」「某符号 360 度引用」「安全重命名」「自定义图查询」时，主 Agent 也可委托 gitnexus SubAgent。
+
+## 与 task-priority-workflow、agent-orchestration 一致
+
+- **任务开始**：与 `task-priority-workflow.mdc` 步骤 2 一致——代码类任务必委托 gitnexus（detect_changes、stale 则 analyze、再 query）。
+- **禁止直接调用**：与 `agent-orchestration.mdc`「主 Agent 禁止直接执行」一致——GitNexus 工具调用一律委托 **gitnexus**。
+- **任务类型表**：GitNexus（索引检查、query、impact、detect_changes 等）→ 委托 **gitnexus**。
+
+## 索引 stale 时
+
+若 gitnexus SubAgent 或工具返回索引过期（stale），须在**仓库根目录**执行：
+
+```bash
+npx gitnexus analyze
+```
+
+可选 `--embeddings` 以启用语义搜索；完成后主 Agent 再委托 gitnexus 继续 query/impact/detect_changes。
+
+## 与 code-navigator（Serena）的分工
+
+- **code-navigator**：代码查找、符号定位、引用追踪、重构时的 Serena 分析（find_symbol、find_referencing_symbols 等）。
+- **gitnexus**：图上的影响分析、执行流查询、变更范围检测、基于图的安全重命名。两者互补，不替代。
+
+## GitNexus 专用 Skills
+
+GitNexus 提供专用 skills，按任务类型选用对应 workflow。路径：**.claude/skills/gitnexus/**（与 Claude Code 共用）：
+
+- **gitnexus-exploring** — 理解架构、代码如何工作、执行流
+- **gitnexus-impact-analysis** — 影响范围、提交前 detect_changes
+- **gitnexus-debugging** — 追踪 Bug、失败原因
+- **gitnexus-refactoring** — 重命名、抽取、拆分、安全重构
+- **gitnexus-guide** — 工具表、MCP 资源、图 schema
+- **gitnexus-cli** — index、status、clean、wiki 等 CLI
+
+gitnexus SubAgent 执行时须按任务类型遵循上述对应 Skill 的流程与检查清单。见 `.cursor/agents/gitnexus.md`。
+
+## 参考
+
+- SubAgent：`.cursor/agents/gitnexus.md`
+- Command：`.cursor/commands/gitnexus.md`（如 `/gitnexus detect_changes`、`/gitnexus query 登录`）
+- **GitNexus Skills**：`.claude/skills/gitnexus/`
+- `task-priority-workflow.mdc`、`development-workflow.mdc`、`AGENTS.md` 内 `<!-- gitnexus:start -->` 块
+- [GitNexus](https://github.com/abhigyanpatwari/GitNexus)

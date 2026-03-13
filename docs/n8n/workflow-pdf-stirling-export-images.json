@@ -1,0 +1,104 @@
+{
+  "name": "PDF Upload to StirlingPDF and Export Images",
+  "nodes": [
+    {
+      "id": "webhook-pdf",
+      "name": "接收 PDF 上传",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300],
+      "webhookId": "pdf-upload-stirling",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdf-upload",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "notes": "POST multipart/form-data，表单字段名请用 file（或 data）上传 PDF 文件"
+    },
+    {
+      "id": "http-stirling-pdf-to-img",
+      "name": "StirlingPDF 转图片",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [460, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:8080/api/v1/convert/pdf/img",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "fileInput",
+              "inputDataFieldName": "data"
+            },
+            {
+              "parameterType": "string",
+              "name": "imageFormat",
+              "value": "png"
+            },
+            {
+              "parameterType": "string",
+              "name": "singleOrMultiple",
+              "value": "multiple"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "notes": "若 StirlingPDF 需 API Key，在「Send Headers」中添加 X-API-KEY。URL 可改为环境变量或你的 Stirling 地址。"
+    },
+    {
+      "id": "write-download",
+      "name": "保存到 Download",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "fileName": "=~/Downloads/stirling_export_{{ $now.format('yyyy-MM-dd_HH-mm-ss') }}.zip",
+        "dataPropertyName": "data"
+      },
+      "notes": "StirlingPDF multiple 模式可能返回 zip。请将路径改为你的本机 Download（如 Windows: C:\\Users\\你的用户名\\Downloads\\...）"
+    }
+  ],
+  "connections": {
+    "接收 PDF 上传": {
+      "main": [
+        [
+          {
+            "node": "StirlingPDF 转图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "StirlingPDF 转图片": {
+      "main": [
+        [
+          {
+            "node": "保存到 Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
